@@ -3,15 +3,16 @@ import {
   Modal,
   ModalBody,
   ModalContent,
-  ModalFooter,
   ModalHeader,
   useDisclosure,
 } from "@heroui/modal";
 import { Divider } from "@heroui/divider";
 import { Button } from "@heroui/button";
+import { BookUser, LogIn } from "lucide-react";
 
 import { title, subtitle } from "@/components/primitives";
-import { BookUser, LogIn } from "lucide-react";
+import LogInForm from "@/components/logInForm";
+import Link from "next/link";
 
 export default function Home() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -35,6 +36,7 @@ export default function Home() {
       </div>
       <div className="">
         <Button
+          className="hover:bg-gradient-to-r from-gradientStart via-gradientMiddle to-gradientEnd hover:text-white transition-all duration-300 ease-in-out"
           color="primary"
           radius="full"
           startContent={<LogIn />}
@@ -57,22 +59,23 @@ export default function Home() {
           </span>
         </p>
       </div>
-      <Button
-        color="primary"
-        radius="full"
-        startContent={<BookUser />}
-        variant="solid"
-        onPress={onOpen}
-      >
-        Register Now!
-      </Button>
-      <Modal isOpen={isOpen} size={"xl"} onClose={onClose}>
+      <Link href="/register">
+        <Button
+          color="primary"
+          radius="full"
+          startContent={<BookUser />}
+          variant="solid"
+        >
+          Register Now!
+        </Button>
+      </Link>
+      <Modal isOpen={isOpen} placement="center" size={"xl"} onClose={onClose}>
         <ModalContent>
           <ModalHeader className="flex justify-between items-center gap-1">
             Open Your Locker
           </ModalHeader>
           <ModalBody>
-            <p>Login form</p>
+            <LogInForm />
           </ModalBody>
         </ModalContent>
       </Modal>
