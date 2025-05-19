@@ -1,6 +1,9 @@
-const { withNextVideo } = require('next-video/process')
+/** @type {import("next").NextConfig} */
+const nextConfig = {
+  // Explicitly set webpack as the bundler
+  experimental: {
+    turbo: false,
+  },
+};
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {};
-
-module.exports = withNextVideo(nextConfig);
+module.exports = nextConfig;
