@@ -31,7 +31,7 @@ export default function Home() {
         </span>
 
         <div className={subtitle({ class: "mt-4" })}>
-          A simple and modern platform for students to post text and images
+          A simple and modern platform for students to store text and images
           effortlessly.
         </div>
       </div>

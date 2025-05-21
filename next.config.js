@@ -1,9 +1,6 @@
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-  // Explicitly set webpack as the bundler
-  experimental: {
-    turbo: false,
-  },
+  allowedDevOrigins: ["http://192.168.0.118:3000"],
 };
 
 module.exports = nextConfig;

@@ -3,13 +3,19 @@ import { Button } from "@heroui/button";
 import { Form } from "@heroui/form";
 import { Input } from "@heroui/input";
 import { Eye, EyeClosed } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Swal from "sweetalert2";
+
+import { useRegister } from "@/hooks/useAuth";
 
 const RegisterPage = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
-  const [errors, setErrors] = useState({});
+
+  const register = useRegister();
+  const router = useRouter();
 
   const onSubmit = (e: any) => {
     e.preventDefault();
@@ -17,12 +23,54 @@ const RegisterPage = () => {
 
     const data = Object.fromEntries(new FormData(e.currentTarget));
 
-    const result = data;
+    const emailORusername = data.emailORusername as string;
+    const password = data.password as string;
 
-    console.log(result);
-
-    setErrors(result.errors);
-    setIsLoading(false);
+    try {
+      register.mutate(
+        { emailORusername, password },
+        {
+          onSuccess: () => {
+            router.push("/profile");
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "success",
+              title: "Locker created successfully!",
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+            });
+          },
+          onError: () => {
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "error",
+              title: "Invalid credentials",
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+            });
+          },
+          onSettled: () => {
+            setIsLoading(false);
+          },
+        }
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: "Something went wrong!",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -45,7 +93,7 @@ const RegisterPage = () => {
           isRequired
           errorMessage="Please enter a valid email or username"
           label="Email or Username"
-          name="username"
+          name="emailORusername"
           type="text"
           variant="underlined"
           // eslint-disable-next-line no-console

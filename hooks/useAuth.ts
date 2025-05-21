@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 
-import { fetchProfile, loginAPI, registerAPI } from "@/api/auth";
+import { fetchProfile, forgetAPI, loginAPI, registerAPI } from "@/api/auth";
 import { useAuthStore } from "@/store/authStore";
 
 export const useLogin = () => {
@@ -24,11 +24,22 @@ export const useRegister = () => {
   const login = useAuthStore((s) => s.login);
 
   return useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string }) =>
-      registerAPI(email, password),
+    mutationFn: ({
+      emailORusername,
+      password,
+    }: {
+      emailORusername: string;
+      password: string;
+    }) => registerAPI(emailORusername, password),
     onSuccess: ({ user, token }) => {
       login(user, token);
     },
+  });
+};
+
+export const useForgetPassword = () => {
+  return useMutation({
+    mutationFn: ({ email }: { email: string }) => forgetAPI(email),
   });
 };
 
