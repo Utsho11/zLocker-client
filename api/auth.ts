@@ -1,19 +1,16 @@
 import axios from "@/lib/axios";
 
-export const loginAPI = async (emailORusername: string, password: string) => {
-  const res = await axios.post("/auth/login", { emailORusername, password });
+export const loginAPI = async (email: string, password: string) => {
+  const res = await axios.post("/auth/login", { email, password });
 
   // console.log(res);
 
   return res.data;
 };
 
-export const registerAPI = async (
-  emailORusername: string,
-  password: string
-) => {
+export const registerAPI = async (email: string, password: string) => {
   const res = await axios.post("/users/register-user", {
-    emailORusername,
+    email,
     password,
   });
 
@@ -30,6 +27,14 @@ export const forgetAPI = async (email: string) => {
 
 export const fetchProfile = async () => {
   const res = await axios.get("/auth/me");
+
+  return res.data;
+};
+
+export const verifyCodeAPI = async (code: string, email: string) => {
+  const res = await axios.post("/auth/verify-code", { code, email });
+
+  // console.log(res);
 
   return res.data;
 };

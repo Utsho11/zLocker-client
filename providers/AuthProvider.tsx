@@ -3,6 +3,7 @@
 
 import { ReactNode, useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import { useAuthStore } from "@/store/authStore";
 
 interface Props {
@@ -27,12 +28,13 @@ export default function AuthProvider({ children }: Props) {
                 Authorization: `Bearer ${token}`,
               },
               credentials: "include",
-            }
+            },
           );
 
           if (!res.ok) throw new Error("Invalid session");
 
           const user = await res.json();
+
           login(user, token);
         } catch {
           logout();

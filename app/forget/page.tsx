@@ -5,11 +5,11 @@ import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { useState } from "react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 import { title } from "@/components/primitives";
 import { useForgetPassword } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
-import Swal from "sweetalert2";
 
 export default function ForgetPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +55,7 @@ export default function ForgetPage() {
           onSettled: () => {
             setIsLoading(false);
           },
-        }
+        },
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {

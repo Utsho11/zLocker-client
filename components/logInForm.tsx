@@ -23,12 +23,12 @@ const LogInForm = () => {
 
     const data = Object.fromEntries(new FormData(e.currentTarget));
 
-    const emailORusername = data.emailORusername as string;
+    const email = data.email as string;
     const password = data.password as string;
 
     try {
       login.mutate(
-        { emailORusername, password },
+        { email, password },
         {
           onSuccess: () => {
             router.push("/profile");
@@ -78,9 +78,9 @@ const LogInForm = () => {
       <Form onSubmit={onSubmit}>
         <Input
           isRequired
-          errorMessage="Please enter a valid email or username"
-          label="Email or Username"
-          name="emailORusername"
+          errorMessage="Please enter a valid email"
+          label="Email"
+          name="email"
           type="text"
           variant="underlined"
           // eslint-disable-next-line no-console

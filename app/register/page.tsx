@@ -8,6 +8,7 @@ import { useState } from "react";
 import Swal from "sweetalert2";
 
 import { useRegister } from "@/hooks/useAuth";
+import { useVerificationStore } from "@/store/useVerificationStore";
 
 const RegisterPage = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -15,6 +16,7 @@ const RegisterPage = () => {
   const toggleVisibility = () => setIsVisible(!isVisible);
 
   const register = useRegister();
+  const { setEmail } = useVerificationStore();
   const router = useRouter();
 
   const onSubmit = (e: any) => {
@@ -23,20 +25,22 @@ const RegisterPage = () => {
 
     const data = Object.fromEntries(new FormData(e.currentTarget));
 
-    const emailORusername = data.emailORusername as string;
+    const email = data.email as string;
     const password = data.password as string;
 
     try {
       register.mutate(
-        { emailORusername, password },
+        { email, password },
         {
           onSuccess: () => {
-            router.push("/profile");
+            setEmail(email);
+            router.push("/verify-code");
             Swal.fire({
               toast: true,
-              position: "top-end",
+              position: "top",
               icon: "success",
-              title: "Locker created successfully!",
+              title: "We’ve sent a verification code to your email.",
+              text: "Be sure to check your inbox and spam folder.",
               showConfirmButton: false,
               timer: 3000,
               timerProgressBar: true,
@@ -56,7 +60,7 @@ const RegisterPage = () => {
           onSettled: () => {
             setIsLoading(false);
           },
-        }
+        },
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
@@ -92,8 +96,8 @@ const RegisterPage = () => {
         <Input
           isRequired
           errorMessage="Please enter a valid email or username"
-          label="Email or Username"
-          name="emailORusername"
+          label="Email"
+          name="email"
           type="text"
           variant="underlined"
           // eslint-disable-next-line no-console

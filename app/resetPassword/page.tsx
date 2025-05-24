@@ -1,5 +1,4 @@
 "use client";
-import { title } from "@/components/primitives";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Form } from "@heroui/form";
@@ -9,6 +8,8 @@ import { Eye, EyeClosed } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import Swal from "sweetalert2";
+
+import { title } from "@/components/primitives";
 
 export default function ResetPassPage() {
   const [newPassword, setNewPassword] = useState("");
@@ -45,7 +46,7 @@ export default function ResetPassPage() {
           headers: {
             Authorization: `${token}`,
           },
-        }
+        },
       );
 
       Swal.fire({
@@ -74,8 +75,6 @@ export default function ResetPassPage() {
           <CardBody className="space-y-4">
             <Input
               isRequired
-              label="New Password"
-              name="newPassword"
               endContent={
                 <button
                   aria-label="toggle password visibility"
@@ -90,17 +89,16 @@ export default function ResetPassPage() {
                   )}
                 </button>
               }
+              label="New Password"
+              name="newPassword"
               type={isVisible ? "text" : "password"}
-              variant="underlined"
               value={newPassword}
+              variant="underlined"
               onChange={(e) => setNewPassword(e.target.value)}
             />
             <Input
               isRequired
-              label="Confirm Password"
-              name="confirmPassword"
-              type={isVisible ? "text" : "password"}
-              variant="underlined"
+              color={confirmPassword && !passwordsMatch ? "danger" : "default"}
               endContent={
                 <button
                   aria-label="toggle password visibility"
@@ -115,23 +113,26 @@ export default function ResetPassPage() {
                   )}
                 </button>
               }
-              color={confirmPassword && !passwordsMatch ? "danger" : "default"}
               errorMessage={
                 confirmPassword && !passwordsMatch
                   ? "Passwords do not match"
                   : ""
               }
+              label="Confirm Password"
+              name="confirmPassword"
+              type={isVisible ? "text" : "password"}
               value={confirmPassword}
+              variant="underlined"
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </CardBody>
           <CardFooter>
             <Button
               color="primary"
-              isLoading={isLoading}
-              type="submit"
               isDisabled={!passwordsMatch}
+              isLoading={isLoading}
               size="sm"
+              type="submit"
             >
               Submit
             </Button>
