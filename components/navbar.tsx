@@ -25,8 +25,9 @@ import {
   SearchIcon,
   ZLogo,
 } from "@/components/icons";
+import SignoutButton from "./SignoutButton";
 
-export const Navbar = () => {
+export const Navbar = ({ session }: { session: any }) => {
   const searchInput = (
     <Input
       aria-label="Search"
@@ -65,7 +66,7 @@ export const Navbar = () => {
               <NextLink
                 className={clsx(
                   linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium",
+                  "data-[active=true]:text-primary data-[active=true]:font-medium"
                 )}
                 color="foreground"
                 href={item.href}
@@ -93,6 +94,7 @@ export const Navbar = () => {
           </Link>
           <ThemeSwitch />
         </NavbarItem>
+        <>{session?.user ? <SignoutButton /> : <></>}</>
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">

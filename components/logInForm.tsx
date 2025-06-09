@@ -6,59 +6,37 @@ import { Form } from "@heroui/form";
 import { Input } from "@heroui/input";
 import { Eye, EyeClosed } from "lucide-react";
 import Swal from "sweetalert2";
-import { useRouter } from "next/navigation";
-
-import { useLogin } from "@/hooks/useAuth";
+import { signIn } from "next-auth/react";
 
 const LogInForm = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
-
-  const login = useLogin();
-  const router = useRouter();
-  const onSubmit = (e: any) => {
+  const onSubmit = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
 
     const data = Object.fromEntries(new FormData(e.currentTarget));
-
     const email = data.email as string;
     const password = data.password as string;
 
     try {
-      login.mutate(
-        { email, password },
-        {
-          onSuccess: () => {
-            router.push("/profile");
-            Swal.fire({
-              toast: true,
-              position: "top-end",
-              icon: "success",
-              title: "Logged in successfully!",
-              showConfirmButton: false,
-              timer: 3000,
-              timerProgressBar: true,
-            });
-          },
-          onError: () => {
-            Swal.fire({
-              toast: true,
-              position: "top-end",
-              icon: "error",
-              title: "Invalid credentials",
-              showConfirmButton: false,
-              timer: 3000,
-              timerProgressBar: true,
-            });
-          },
-          onSettled: () => {
-            setIsLoading(false);
-          },
-        }
-      );
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      await signIn("credentials", {
+        email,
+        password,
+        redirect: true,
+        callbackUrl: "/dashboard",
+      });
+
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Logged in successfully!",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
     } catch (error) {
       Swal.fire({
         toast: true,
@@ -69,6 +47,7 @@ const LogInForm = () => {
         timer: 3000,
         timerProgressBar: true,
       });
+    } finally {
       setIsLoading(false);
     }
   };

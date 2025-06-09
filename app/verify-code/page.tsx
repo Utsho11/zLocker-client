@@ -1,21 +1,21 @@
 "use client";
-
-import { useState } from "react";
 import { Button } from "@heroui/button";
 import { Form } from "@heroui/form";
 import { InputOtp } from "@heroui/input-otp";
+import Swal from "sweetalert2";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { title } from "@/components/primitives";
-import { useVerificationStore } from "@/store/useVerificationStore";
-import { useVerifyCode } from "@/hooks/useAuth";
-import Swal from "sweetalert2";
-import { useRouter } from "next/navigation";
+import { useResendVerifyCode, useVerifyCode } from "@/hooks/useAuth";
+import ResendCodeButton from "@/components/ResendCodeButton";
 
 export default function VerifyCodePage() {
-  const { email } = useVerificationStore();
-  const [isResending, setIsResending] = useState(false);
+  const email = useSearchParams().get("email") || "";
+
   const router = useRouter();
+
   const { mutate: verifyCode, isPending: isSubmitting } = useVerifyCode();
+  const { mutate: resendVerifyCode } = useResendVerifyCode();
 
   const handleVerify = async (e: any) => {
     e.preventDefault();
@@ -35,23 +35,39 @@ export default function VerifyCodePage() {
       verifyCode(
         { code: otp, email },
         {
-          onSuccess: () => {
-            Swal.fire({
+          onSuccess: async () => {
+            Swal.close();
+            await Swal.fire({
               icon: "success",
-              title: "Success",
-              text: "Verified successfully!",
-              confirmButtonColor: "#3b82f6",
-            }).then(() => {
-              router.push("/profile");
+              title: "Email Verified!",
+              text: "Your email has been successfully verified.",
+              confirmButtonText: "Ok",
+              confirmButtonColor: "#3085d6",
             });
+
+            router.push("/dashboard");
           },
-          onError: (error: any) => {
+
+          onError: (error: unknown) => {
+            let errorMessage = "Verification failed. Please try again.";
+
+            if (
+              typeof error === "object" &&
+              error !== null &&
+              "response" in error &&
+              typeof (error as any).response === "object" &&
+              (error as any).response !== null &&
+              "data" in (error as any).response &&
+              typeof (error as any).response.data === "object" &&
+              (error as any).response.data !== null &&
+              "message" in (error as any).response.data
+            ) {
+              errorMessage = (error as any).response.data.message;
+            }
             Swal.fire({
               icon: "error",
               title: "Verification Failed",
-              text:
-                error.response?.data?.message ||
-                "Verification failed. Please try again.",
+              text: errorMessage,
               confirmButtonColor: "#3b82f6",
             });
           },
@@ -59,10 +75,36 @@ export default function VerifyCodePage() {
       );
     } catch (error) {
       console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Unexpected Error",
+        text: "Something went wrong. Please try again.",
+        confirmButtonColor: "#3b82f6",
+      });
     }
   };
 
-  const handleResend = async () => {};
+  const handleResend = async () => {
+    try {
+      await resendVerifyCode({ email });
+
+      Swal.fire({
+        icon: "success",
+        title: "Code Resent!",
+        text: "A new verification code has been sent to your email.",
+        confirmButtonText: "Ok",
+        confirmButtonColor: "#3085d6",
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Resend Failed",
+        text: "Failed to resend the verification code. Please try again.",
+        confirmButtonColor: "#3b82f6",
+      });
+    }
+  };
 
   return (
     <div className="flex items-center justify-center  px-4">
@@ -91,21 +133,13 @@ export default function VerifyCodePage() {
           />
 
           <div className="flex justify-between items-center w-[80%]">
+            <ResendCodeButton onResend={handleResend} />
             <Button
               color="primary"
-              disabled={isResending}
-              isLoading={isResending}
-              variant="light"
-              onPress={handleResend}
-            >
-              Resend code
-            </Button>
-            <Button
-              color="primary"
+              isLoading={isSubmitting}
               size="sm"
               type="submit"
               variant="solid"
-              isLoading={isSubmitting}
             >
               Verify OTP
             </Button>

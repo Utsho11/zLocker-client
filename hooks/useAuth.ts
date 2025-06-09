@@ -1,35 +1,17 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   fetchProfile,
   forgetAPI,
-  loginAPI,
   registerAPI,
+  resendCodeApi,
   verifyCodeAPI,
 } from "@/api/auth";
-import { useAuthStore } from "@/store/authStore";
-
-export const useLogin = () => {
-  const login = useAuthStore((s) => s.login);
-
-  return useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string }) =>
-      loginAPI(email, password),
-    onSuccess: ({ user, token }) => {
-      login(user, token);
-    },
-  });
-};
 
 export const useRegister = () => {
-  const login = useAuthStore((s) => s.login);
-
   return useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) =>
       registerAPI(email, password),
-    onSuccess: ({ user, token }) => {
-      login(user, token);
-    },
   });
 };
 
@@ -48,13 +30,19 @@ export const useProfile = () => {
 };
 
 export const useVerifyCode = () => {
-  const login = useAuthStore((s) => s.login);
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ code, email }: { code: string; email: string }) =>
       verifyCodeAPI(code, email),
-    onSuccess: ({ user, token }) => {
-      login(user, token);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
     },
+  });
+};
+
+export const useResendVerifyCode = () => {
+  return useMutation({
+    mutationFn: ({ email }: { email: string }) => resendCodeApi(email),
   });
 };

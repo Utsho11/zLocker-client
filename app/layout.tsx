@@ -9,6 +9,8 @@ import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
 import AuthProvider from "@/providers/AuthProvider";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/utils/authOptions";
 
 export const metadata: Metadata = {
   title: {
@@ -28,25 +30,27 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getServerSession(authOptions);
+
   return (
     <html suppressHydrationWarning lang="en">
       <head />
       <body
         className={clsx(
           "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable,
+          fontSans.variable
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
           <AuthProvider>
             <div className="relative flex flex-col h-screen">
-              <Navbar />
-              <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
+              <Navbar session={session} />
+              <main className="container mx-auto pt-16 px-6 flex-grow">
                 {children}
               </main>
 

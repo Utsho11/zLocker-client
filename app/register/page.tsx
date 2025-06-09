@@ -2,13 +2,14 @@
 import { Button } from "@heroui/button";
 import { Form } from "@heroui/form";
 import { Input } from "@heroui/input";
-import { Eye, EyeClosed } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import Swal from "sweetalert2";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { Eye, EyeClosed } from "lucide-react";
 
-import { useRegister } from "@/hooks/useAuth";
 import { useVerificationStore } from "@/store/useVerificationStore";
+import { useRegister } from "@/hooks/useAuth";
 
 const RegisterPage = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -32,9 +33,15 @@ const RegisterPage = () => {
       register.mutate(
         { email, password },
         {
-          onSuccess: () => {
+          onSuccess: async () => {
             setEmail(email);
-            router.push("/verify-code");
+            await signIn("credentials", {
+              email,
+              password,
+              redirect: true,
+              callbackUrl: "/profile",
+            });
+            router.push(`/verify-code?email=${email}`);
             Swal.fire({
               toast: true,
               position: "top",
@@ -46,12 +53,17 @@ const RegisterPage = () => {
               timerProgressBar: true,
             });
           },
-          onError: () => {
+          onError: (error) => {
+            console.log(error);
+
             Swal.fire({
               toast: true,
               position: "top-end",
               icon: "error",
-              title: "Invalid credentials",
+              title: "Registration Failed",
+              text:
+                // error?.response?.data?.message ||
+                "Verification failed. Please try again.",
               showConfirmButton: false,
               timer: 3000,
               timerProgressBar: true,
@@ -60,7 +72,7 @@ const RegisterPage = () => {
           onSettled: () => {
             setIsLoading(false);
           },
-        },
+        }
       );
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {

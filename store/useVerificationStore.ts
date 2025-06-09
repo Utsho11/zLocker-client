@@ -15,7 +15,7 @@ export const useVerificationStore = create<VerificationState>()(
       clearEmail: () => set({ email: "" }),
     }),
     {
-      name: "verification-storage", // this is the key in localStorage
+      name: "verification-storage",
     },
   ),
 );
