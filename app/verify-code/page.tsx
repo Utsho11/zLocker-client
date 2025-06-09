@@ -4,6 +4,8 @@ import { Form } from "@heroui/form";
 import { InputOtp } from "@heroui/input-otp";
 import Swal from "sweetalert2";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { title } from "@/components/primitives";
 import { useResendVerifyCode, useVerifyCode } from "@/hooks/useAuth";
@@ -16,6 +18,8 @@ export default function VerifyCodePage() {
 
   const { mutate: verifyCode, isPending: isSubmitting } = useVerifyCode();
   const { mutate: resendVerifyCode } = useResendVerifyCode();
+  const queryClient = useQueryClient();
+  const { update } = useSession();
 
   const handleVerify = async (e: any) => {
     e.preventDefault();
@@ -35,7 +39,11 @@ export default function VerifyCodePage() {
       verifyCode(
         { code: otp, email },
         {
-          onSuccess: async () => {
+          onSuccess: async (res) => {
+            console.log(res.data.accessToken);
+
+            const newToken = res.data.accessToken;
+
             Swal.close();
             await Swal.fire({
               icon: "success",
@@ -44,6 +52,12 @@ export default function VerifyCodePage() {
               confirmButtonText: "Ok",
               confirmButtonColor: "#3085d6",
             });
+
+            await update({
+              accessToken: newToken,
+            });
+
+            await queryClient.invalidateQueries({ queryKey: ["me"] });
 
             router.push("/dashboard");
           },
@@ -71,7 +85,7 @@ export default function VerifyCodePage() {
               confirmButtonColor: "#3b82f6",
             });
           },
-        }
+        },
       );
     } catch (error) {
       console.error(error);

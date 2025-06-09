@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
   fetchProfile,
@@ -26,18 +26,14 @@ export const useProfile = () => {
     queryKey: ["me"],
     queryFn: fetchProfile,
     retry: false,
+    staleTime: 0,
   });
 };
 
 export const useVerifyCode = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: ({ code, email }: { code: string; email: string }) =>
       verifyCodeAPI(code, email),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["me"] });
-    },
   });
 };
 

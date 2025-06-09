@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@heroui/button";
 import { EditIcon, FileText, ImageIcon } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
+import { useEffect } from "react";
 
 import { useProfile } from "@/hooks/useAuth";
 
@@ -12,19 +13,27 @@ export default function ProfilePage() {
   const user = useProfile();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!user.isLoading) {
+      const userData = user.data?.data;
+
+      if (!userData) {
+        router.push("/login");
+
+        return;
+      }
+
+      if (!userData.isVerified) {
+        router.push(`/verify-code?email=${userData.email}`);
+      }
+    }
+  }, [user.isLoading, user.data, router]);
+
   if (user.isLoading) {
     return <div>Loading...</div>;
   }
 
   const { email, name, isVerified } = user.data?.data || {};
-
-  if (!user) {
-    router.push("/login");
-  }
-
-  if (!isVerified) {
-    router.push(`/verify-code?email=${email}`);
-  }
 
   const handleNavigate = (path: string) => {
     router.push(path);

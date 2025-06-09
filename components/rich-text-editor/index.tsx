@@ -4,9 +4,10 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import Highlight from "@tiptap/extension-highlight";
-import MenuBar from "./menu-bar";
 import { Card, CardBody } from "@heroui/card";
 import Heading from "@tiptap/extension-heading";
+
+import MenuBar from "./menu-bar";
 
 interface RichTextEditorProps {
   content: string;

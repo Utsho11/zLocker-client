@@ -5,12 +5,12 @@ import {
   AlignLeft,
   AlignRight,
   Bold,
+  Copy,
   Heading1,
   Heading2,
   Heading3,
   Heading4,
   Heading5,
-  Heading6,
   Highlighter,
   Italic,
   List,
@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { Editor } from "@tiptap/react";
 import { Button, ButtonGroup } from "@heroui/button";
+import Swal from "sweetalert2";
+import clipboardCopy from "clipboard-copy";
 
 export default function MenuBar({ editor }: { editor: Editor | null }) {
   if (!editor) return null;
@@ -97,11 +99,31 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       onClick: () => editor.chain().focus().toggleHighlight().run(),
       isActive: editor.isActive("highlight"),
     },
+    {
+      icon: <Copy size={16} />,
+      onClick: async () => {
+        if (editor) {
+          const plainText = editor.getText();
+
+          await clipboardCopy(plainText);
+
+          Swal.fire({
+            toast: true,
+            position: "top-end",
+            title: "Content copied to clipboard!",
+            icon: "success",
+            timer: 1500,
+            showConfirmButton: false,
+          });
+        }
+      },
+      isActive: false,
+    },
   ];
 
   return (
-    <div className="flex justify-start border rounded-md p-2 mb-2 z-50 overflow-x-auto">
-      <ButtonGroup variant="light" radius="sm">
+    <div className="flex justify-start border rounded-md p-2 mb-2 z-10 overflow-x-auto">
+      <ButtonGroup radius="sm" variant="light">
         {options.map((option, index) => (
           <Button
             key={index}

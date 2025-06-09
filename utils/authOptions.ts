@@ -31,9 +31,17 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user?.accessToken) {
         token.accessToken = user.accessToken;
+      }
+
+      if (trigger === "update" && session?.accessToken) {
+        console.log(trigger);
+
+        console.log("Updating access token in JWT callback");
+
+        token.accessToken = session.accessToken;
       }
 
       return token;

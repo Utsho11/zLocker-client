@@ -1,10 +1,12 @@
 // Example: Making a request with token from session (Server Side)
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/utils/authOptions";
 import axios from "axios";
+
+import { authOptions } from "@/utils/authOptions";
 
 export const fetchWithToken = async (req: any, res: any) => {
   const session = await getServerSession(req, res, authOptions);
+
   console.log();
 
   //   const token = session?.user?.accessToken;
@@ -15,7 +17,7 @@ export const fetchWithToken = async (req: any, res: any) => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    }
+    },
   );
 
   return response.data;
