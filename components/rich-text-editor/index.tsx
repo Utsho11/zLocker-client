@@ -8,6 +8,7 @@ import { Card, CardBody } from "@heroui/card";
 import Heading from "@tiptap/extension-heading";
 
 import MenuBar from "./menu-bar";
+import { useEffect } from "react";
 
 interface RichTextEditorProps {
   content: string;
@@ -57,6 +58,12 @@ export default function RichTextEditor({
       if (onChange) onChange(editor.getHTML());
     },
   });
+
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content, false); // false prevents triggering onUpdate
+    }
+  }, [content, editor]);
 
   if (!editor) {
     return null;

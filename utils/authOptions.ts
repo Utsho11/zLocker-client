@@ -37,9 +37,9 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (trigger === "update" && session?.accessToken) {
-        console.log(trigger);
+        //   console.log(trigger);
 
-        console.log("Updating access token in JWT callback");
+        //   console.log("Updating access token in JWT callback");
 
         token.accessToken = session.accessToken;
       }
