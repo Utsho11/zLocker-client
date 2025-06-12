@@ -38,8 +38,7 @@ const RegisterPage = () => {
             await signIn("credentials", {
               email,
               password,
-              redirect: true,
-              callbackUrl: "/profile",
+              redirect: false,
             });
             router.push(`/verify-code?email=${email}`);
             Swal.fire({
