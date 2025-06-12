@@ -12,18 +12,24 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const { email, password } = credentials || {};
+        try {
+          const { email, password } = credentials || {};
 
-        if (!email || !password) return null;
+          if (!email || !password) return null;
 
-        const res = await loginAPI(email, password);
-        const accessToken = res?.data?.accessToken;
+          const res = await loginAPI(email, password);
+          const accessToken = res?.data?.accessToken;
 
-        if (accessToken) {
-          return { accessToken }; // return token here
+          if (accessToken) {
+            return { accessToken }; // return token here
+          }
+
+          return null;
+        } catch (error) {
+          console.log(error);
+
+          throw error;
         }
-
-        return null;
       },
     }),
   ],

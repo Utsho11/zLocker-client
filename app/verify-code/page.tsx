@@ -40,9 +40,9 @@ export default function VerifyCodePage() {
         { code: otp, email },
         {
           onSuccess: async (res) => {
-            console.log(res.data.accessToken);
-
             const newToken = res.data.accessToken;
+
+            // console.log("new token after verify:", newToken);
 
             Swal.close();
             await Swal.fire({
@@ -85,7 +85,7 @@ export default function VerifyCodePage() {
               confirmButtonColor: "#3b82f6",
             });
           },
-        },
+        }
       );
     } catch (error) {
       console.error(error);

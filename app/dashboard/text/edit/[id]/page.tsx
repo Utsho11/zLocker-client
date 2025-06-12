@@ -6,17 +6,17 @@ import { Button } from "@heroui/button";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
+import { Spinner } from "@nextui-org/react";
 
 import { useGetContent, useUpdateContent } from "@/hooks/useContent";
 import RichTextEditor from "@/components/rich-text-editor";
-import { Spinner } from "@nextui-org/react";
 
 const Page = () => {
   const { id } = useParams();
   const router = useRouter();
 
   const { data, isPending, isFetching, isLoading } = useGetContent(
-    id as string
+    id as string,
   );
   const [content, setContent] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);

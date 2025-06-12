@@ -16,6 +16,7 @@
     "@heroui/code": "2.2.14",
     "@heroui/divider": "^2.2.13",
     "@heroui/form": "^2.1.18",
+    "@heroui/image": "^2.2.13",
     "@heroui/input": "2.4.19",
     "@heroui/input-otp": "^2.1.18",
     "@heroui/kbd": "2.2.15",

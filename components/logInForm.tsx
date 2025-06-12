@@ -7,11 +7,14 @@ import { Input } from "@heroui/input";
 import { Eye, EyeClosed } from "lucide-react";
 import Swal from "sweetalert2";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const LogInForm = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
+  const router = useRouter();
+
   const onSubmit = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
@@ -21,28 +24,53 @@ const LogInForm = () => {
     const password = data.password as string;
 
     try {
-      await signIn("credentials", {
+      // login({ email, password });
+
+      const res = signIn("credentials", {
         email,
         password,
-        redirect: true,
-        callbackUrl: "/dashboard",
+        redirect: false,
       });
 
-      Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "success",
-        title: "Logged in successfully!",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
-    } catch (error) {
+      res
+        .then((response) => {
+          if (response?.ok) {
+            // console.log("Login successful:", response);
+            router.refresh();
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "success",
+              title: "Logged in successfully!",
+              showConfirmButton: false,
+              timer: 1500,
+              timerProgressBar: true,
+            });
+            router.push("/dashboard");
+          } else {
+            // console.log("Login failed:", response?.error);
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "error",
+              title: "Login Failed!!!",
+              text: response?.error || "Something went wrong",
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error during sign-in:", error);
+        });
+    } catch (error: any) {
       Swal.fire({
         toast: true,
         position: "top-end",
         icon: "error",
-        title: "Something went wrong!",
+        title: "Login Failed!!!",
+        text: error || "Something went wrong",
         showConfirmButton: false,
         timer: 3000,
         timerProgressBar: true,

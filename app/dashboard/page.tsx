@@ -1,39 +1,18 @@
 "use client";
-
 import { Avatar } from "@heroui/avatar";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/button";
 import { EditIcon, FileText, ImageIcon } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
-import { useEffect } from "react";
 
 import { useProfile } from "@/hooks/useAuth";
+import { Spinner } from "@nextui-org/react";
 
 export default function ProfilePage() {
-  const user = useProfile();
   const router = useRouter();
+  const { data: user, isFetching } = useProfile();
 
-  useEffect(() => {
-    if (!user.isLoading) {
-      const userData = user.data?.data;
-
-      if (!userData) {
-        router.push("/login");
-
-        return;
-      }
-
-      if (!userData.isVerified) {
-        router.push(`/verify-code?email=${userData.email}`);
-      }
-    }
-  }, [user.isLoading, user.data, router]);
-
-  if (user.isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  const { email, name, isVerified } = user.data?.data || {};
+  const { email, name } = user?.data || {};
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -42,25 +21,38 @@ export default function ProfilePage() {
   return (
     <div className="w-full px-4 sm:px-8">
       {/* Profile Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between border-b border-gray-200 py-6 gap-4">
-        <div className="flex justify-between items-center gap-4 text-center md:w-3/4">
-          <Avatar isBordered radius="sm" size="lg" src="/user.png" />
-          <div>
+
+      {isFetching ? (
+        <>
+          <Spinner
+            classNames={{ label: "text-foreground mt-4" }}
+            label="Loading..."
+          />
+        </>
+      ) : (
+        <div className="md:grid md:grid-cols-4 gap-4 text-center space-y-3 border-b-1 border-b-white">
+          <div className="col-span-1 flex justify-center md:justify-start">
+            <Avatar isBordered radius="sm" size="lg" src="/user.png" />
+          </div>
+          <div className="col-span-2 justify-center">
             <h1 className="text-xl sm:text-3xl font-semibold">
               Welcome, {name || email}
             </h1>
             <p className="text-sm text-gray-500">{email}</p>
           </div>
+          <div className="col-span-1 flex justify-center md:justify-end">
+            <Button
+              className="w-full sm:w-auto"
+              size="sm"
+              startContent={<EditIcon size={16} />}
+              variant="flat"
+              onPress={() => handleNavigate("/dashboard/editProfile")}
+            >
+              Edit Profile
+            </Button>
+          </div>
         </div>
-        <Button
-          className="w-full sm:w-auto"
-          size="sm"
-          startContent={<EditIcon size={16} />}
-          variant="flat"
-        >
-          Edit Profile
-        </Button>
-      </div>
+      )}
 
       {/* Cards Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-10 max-w-6xl mx-auto">
@@ -87,7 +79,7 @@ export default function ProfilePage() {
         <Card
           isPressable
           className="hover:shadow-green-600 hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
-          onPress={() => handleNavigate("/image-gallery")}
+          onPress={() => handleNavigate("/dashboard/image")}
         >
           <CardHeader className="flex items-center gap-3">
             <ImageIcon className="text-green-600" size={24} />

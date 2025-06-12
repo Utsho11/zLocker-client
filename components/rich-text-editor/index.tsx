@@ -6,9 +6,9 @@ import TextAlign from "@tiptap/extension-text-align";
 import Highlight from "@tiptap/extension-highlight";
 import { Card, CardBody } from "@heroui/card";
 import Heading from "@tiptap/extension-heading";
+import { useEffect } from "react";
 
 import MenuBar from "./menu-bar";
-import { useEffect } from "react";
 
 interface RichTextEditorProps {
   content: string;

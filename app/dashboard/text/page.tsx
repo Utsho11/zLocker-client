@@ -3,10 +3,10 @@
 import { Card, CardBody, Spinner } from "@nextui-org/react"; // Make sure this matches your UI lib
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 import { useDeleteContent, useGetAllContent } from "@/hooks/useContent";
 import { ContentCard } from "@/components/ContentCard";
-import Swal from "sweetalert2";
 
 const Page = () => {
   const router = useRouter();

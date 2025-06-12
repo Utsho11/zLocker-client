@@ -3,55 +3,35 @@ import { Button } from "@heroui/button";
 import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Form } from "@heroui/form";
 import { Input } from "@heroui/input";
-import axios from "axios";
-import { Eye, EyeClosed } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeClosed, KeyIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Swal from "sweetalert2";
 
 import { title } from "@/components/primitives";
+import { useChangePass } from "@/hooks/useAuth";
 
-export default function ResetPassPage() {
+export default function ChangePassPage() {
   const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
-  const passwordsMatch =
-    newPassword === confirmPassword && confirmPassword !== "";
-
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
-  const email = searchParams.get("email");
 
   const router = useRouter();
+  const { mutateAsync: changePass } = useChangePass();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!passwordsMatch) {
-      Swal.fire({
-        icon: "error",
-        title: "Passwords do not match",
-      });
-    }
-
     try {
       setIsLoading(true);
 
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`,
-        { email, password: newPassword },
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        }
-      );
+      await changePass({ oldPassword, newPassword });
 
       Swal.fire({
         icon: "success",
-        title: "Password reset successful",
+        title: "Password changed successfully.",
         text: "You can now log in with your new password.",
       });
 
@@ -69,7 +49,7 @@ export default function ResetPassPage() {
 
   return (
     <div>
-      <h1 className={title()}>Reset Your Password</h1>
+      <h1 className={title()}>Change Your Password</h1>
       <Card fullWidth isBlurred isHoverable className="my-8">
         <Form onSubmit={handleSubmit}>
           <CardBody className="space-y-4">
@@ -89,16 +69,14 @@ export default function ResetPassPage() {
                   )}
                 </button>
               }
-              label="New Password"
-              name="newPassword"
+              label="Old Password"
+              name="oldPassword"
               type={isVisible ? "text" : "password"}
-              value={newPassword}
               variant="underlined"
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={(e) => setOldPassword(e.target.value)}
             />
             <Input
               isRequired
-              color={confirmPassword && !passwordsMatch ? "danger" : "default"}
               endContent={
                 <button
                   aria-label="toggle password visibility"
@@ -113,28 +91,22 @@ export default function ResetPassPage() {
                   )}
                 </button>
               }
-              errorMessage={
-                confirmPassword && !passwordsMatch
-                  ? "Passwords do not match"
-                  : ""
-              }
-              label="Confirm Password"
-              name="confirmPassword"
+              label="New Password"
+              name="newPassword"
               type={isVisible ? "text" : "password"}
-              value={confirmPassword}
               variant="underlined"
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => setNewPassword(e.target.value)}
             />
           </CardBody>
           <CardFooter>
             <Button
               color="primary"
-              isDisabled={!passwordsMatch}
+              startContent={<KeyIcon size={16} />}
               isLoading={isLoading}
               size="sm"
               type="submit"
             >
-              Submit
+              Change Password
             </Button>
           </CardFooter>
         </Form>
