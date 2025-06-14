@@ -85,8 +85,8 @@ export default function ImageFileInputCardModal() {
       <Modal
         backdrop="blur"
         isOpen={isOpen}
-        onClose={closeModal}
         placement="center"
+        onClose={closeModal}
       >
         <ModalContent>
           <ModalHeader>Upload Image</ModalHeader>

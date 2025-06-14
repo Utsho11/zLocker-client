@@ -20,14 +20,14 @@ export default function Home() {
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
       <div className="relative inline-block max-w-xl text-center justify-center">
-        <span className={title()}>Share&nbsp;</span>
-        <span className={title({ color: "blue" })}>ideas&nbsp;</span>
+        <span className={title()}>Store&nbsp;</span>
+        <span className={title({ color: "blue" })}>notes&nbsp;</span>
         <span className={title()}>
           and{" "}
           <span className="bg-gradient-to-r from-gradientStart via-gradientMiddle to-gradientEnd bg-clip-text text-transparent">
-            creativity
+            images
           </span>{" "}
-          <br /> with your classmates.
+          <br /> with zlocker.
         </span>
 
         <div className={subtitle({ class: "mt-4" })}>

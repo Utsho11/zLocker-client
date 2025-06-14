@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardHeader, CardBody, Input, Button } from "@nextui-org/react";
 import { Pencil, Check, Key } from "lucide-react";
 import Swal from "sweetalert2";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { useAddUsername, useProfile } from "@/hooks/useAuth";
 
@@ -13,7 +13,7 @@ export default function EditPage() {
   const user = useProfile();
   const { email, name } = user.data?.data || {};
   const [editedName, setEditedName] = useState(name);
-
+  const router = useRouter();
   const { mutate: addUsername } = useAddUsername();
 
   const handleSaveName = async () => {
@@ -21,7 +21,7 @@ export default function EditPage() {
     const username = editedName;
 
     try {
-      await addUsername(username, {
+      addUsername(username, {
         onSuccess: () => {
           Swal.fire({
             icon: "success",
@@ -45,6 +45,10 @@ export default function EditPage() {
         text: error.message || "Something went wrong!",
       });
     }
+  };
+
+  const handleNavigate = (path: string) => {
+    router.push(path);
   };
 
   return (
@@ -89,16 +93,15 @@ export default function EditPage() {
         </div>
 
         <div className="w-full">
-          <Link href="/dashboard/changePassword">
-            <Button
-              className="w-full sm:w-auto"
-              size="sm"
-              startContent={<Key size={16} />}
-              variant="flat"
-            >
-              Change Password
-            </Button>
-          </Link>
+          <Button
+            className="w-full sm:w-auto"
+            size="sm"
+            startContent={<Key size={16} />}
+            variant="flat"
+            onPress={() => handleNavigate("/dashboard/changePassword")}
+          >
+            Change Password
+          </Button>
         </div>
       </CardBody>
     </Card>

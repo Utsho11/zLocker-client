@@ -12,27 +12,34 @@ import { Link } from "@heroui/link";
 import { link as linkStyles } from "@heroui/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import SignoutButton from "./SignoutButton";
+import LinkedInIcon from "./icons/LinkedIn";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
-
-import {
-  TwitterIcon,
-  GithubIcon,
-  DiscordIcon,
-  ZLogo,
-} from "@/components/icons";
-import { useSession } from "next-auth/react";
+import { GithubIcon, ZLogo } from "@/components/icons";
+import { useProfile } from "@/hooks/useAuth";
+import { useAuthstore } from "@/store/AuthStore";
 
 export const Navbar = () => {
   const path = usePathname();
+  const router = useRouter();
+  const { data, isSuccess } = useProfile();
+  const setLoggedin = useAuthstore((s) => s.setLogin);
 
-  const { data } = useSession();
+  const isLogin = useAuthstore((s) => s.isLogin);
 
-  const token = data?.user.accessToken;
+  useEffect(() => {
+    if (isSuccess && data) {
+      setLoggedin(true);
+      router.push("/dashboard");
+    } else {
+      setLoggedin(false);
+    }
+  }, [data, isSuccess, setLoggedin]);
 
   return (
     <HeroUINavbar maxWidth="xl" position="sticky">
@@ -40,7 +47,7 @@ export const Navbar = () => {
         <NavbarBrand as="li" className="gap-3 max-w-fit">
           <NextLink
             className="flex justify-start items-center gap-1"
-            href={`${token}` ? "/dashboard" : "/"}
+            href={`${isLogin}` ? "/dashboard" : "/"}
           >
             <ZLogo />
             <p className="font-bold text-inherit">zLocker</p>
@@ -52,7 +59,7 @@ export const Navbar = () => {
               <NextLink
                 className={clsx(
                   linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium"
+                  "data-[active=true]:text-primary data-[active=true]:font-medium",
                 )}
                 color="foreground"
                 href={item.href}
@@ -69,18 +76,19 @@ export const Navbar = () => {
         justify="end"
       >
         <NavbarItem className="hidden sm:flex gap-2">
-          <Link isExternal aria-label="Twitter" href={siteConfig.links.twitter}>
-            <TwitterIcon className="text-default-500" />
-          </Link>
-          <Link isExternal aria-label="Discord" href={siteConfig.links.discord}>
-            <DiscordIcon className="text-default-500" />
+          <Link
+            isExternal
+            aria-label="Discord"
+            href={siteConfig.links.linkedIn}
+          >
+            <LinkedInIcon />
           </Link>
           <Link isExternal aria-label="Github" href={siteConfig.links.github}>
             <GithubIcon className="text-default-500" />
           </Link>
           <ThemeSwitch />
         </NavbarItem>
-        <>{token ? <SignoutButton /> : <></>}</>
+        <>{isLogin ? <SignoutButton /> : <></>}</>
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
@@ -96,13 +104,7 @@ export const Navbar = () => {
           {siteConfig.navItems.map((item, index) => (
             <NavbarMenuItem key={`${item}-${index}`}>
               <Link
-                color={
-                  item.href === path
-                    ? "primary"
-                    : index === siteConfig.navMenuItems.length - 1
-                      ? "danger"
-                      : "foreground"
-                }
+                color={item.href === path ? "primary" : "foreground"}
                 href={item.href}
                 size="lg"
               >
@@ -111,7 +113,7 @@ export const Navbar = () => {
             </NavbarMenuItem>
           ))}
         </div>
-        <>{token ? <SignoutButton /> : <></>}</>
+        <>{isLogin ? <SignoutButton /> : <></>}</>
       </NavbarMenu>
     </HeroUINavbar>
   );

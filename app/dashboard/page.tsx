@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@heroui/button";
 import { EditIcon, FileText, ImageIcon } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
-
-import { useProfile } from "@/hooks/useAuth";
 import { Spinner } from "@nextui-org/react";
 
-export default function ProfilePage() {
+import { useProfile } from "@/hooks/useAuth";
+
+export default function DashboardPage() {
   const router = useRouter();
   const { data: user, isFetching } = useProfile();
 

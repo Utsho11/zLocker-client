@@ -3,10 +3,12 @@ import axios from "@/lib/axios";
 export const loginAPI = async (email: string, password: string) => {
   try {
     const res = await axios.post("/auth/login", { email, password });
+
     return res.data; // assumed to include accessToken and user info
   } catch (error: any) {
     const message =
       error?.response?.data?.message || "Login failed. Please try again.";
+
     throw new Error(message);
   }
 };
@@ -21,6 +23,19 @@ export const registerAPI = async (email: string, password: string) => {
     return res.data;
   } catch (error) {
     throw error;
+  }
+};
+
+export const logOutAPI = async () => {
+  try {
+    const res = await axios.post("/auth/logout");
+
+    return res.data; // assumed to include accessToken and user info
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message || "Login failed. Please try again.";
+
+    throw new Error(message);
   }
 };
 
@@ -87,12 +102,16 @@ export const changedPassAPI = async (
   newPassword: string
 ) => {
   try {
-    const res = await axios.put("/auth/change-password", {
+    // console.log({ oldPassword, newPassword });
+
+    const res = await axios.post("/auth/change-password", {
       oldPassword,
       newPassword,
     });
 
-    return res;
+    // console.log(res);
+
+    return res.data;
   } catch (error) {
     throw error;
   }

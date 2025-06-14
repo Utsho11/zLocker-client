@@ -47,7 +47,11 @@ export const ContentCard: React.FC<ContentCardProps> = ({
 
   return (
     <>
-      <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg shadow-md">
+      <Card
+        isPressable
+        className="w-full max-w-sm sm:max-w-md md:max-w-lg shadow-md"
+        onPress={onOpen}
+      >
         <CardHeader className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">{title}</h3>
           <div className="flex">

@@ -46,7 +46,7 @@ export default function ResetPassPage() {
           headers: {
             Authorization: `${token}`,
           },
-        }
+        },
       );
 
       Swal.fire({

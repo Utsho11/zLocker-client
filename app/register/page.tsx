@@ -5,11 +5,9 @@ import { Input } from "@heroui/input";
 import Swal from "sweetalert2";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Eye, EyeClosed } from "lucide-react";
 
-import { useVerificationStore } from "@/store/useVerificationStore";
-import { useRegister } from "@/hooks/useAuth";
+import { useLogin, useRegister } from "@/hooks/useAuth";
 
 const RegisterPage = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -17,7 +15,7 @@ const RegisterPage = () => {
   const toggleVisibility = () => setIsVisible(!isVisible);
 
   const register = useRegister();
-  const { setEmail } = useVerificationStore();
+  const { mutate: login } = useLogin();
   const router = useRouter();
 
   const onSubmit = (e: any) => {
@@ -29,63 +27,38 @@ const RegisterPage = () => {
     const email = data.email as string;
     const password = data.password as string;
 
-    try {
-      register.mutate(
-        { email, password },
-        {
-          onSuccess: async () => {
-            setEmail(email);
-            await signIn("credentials", {
-              email,
-              password,
-              redirect: false,
-            });
-            router.push(`/verify-code?email=${email}`);
-            Swal.fire({
-              toast: true,
-              position: "top",
-              icon: "success",
-              title: "We’ve sent a verification code to your email.",
-              text: "Be sure to check your inbox and spam folder.",
-              showConfirmButton: false,
-              timer: 3000,
-              timerProgressBar: true,
-            });
-          },
-          onError: (error) => {
-            console.log(error);
-
-            Swal.fire({
-              toast: true,
-              position: "top-end",
-              icon: "error",
-              title: "Registration Failed",
-              text:
-                // error?.response?.data?.message ||
-                "Verification failed. Please try again.",
-              showConfirmButton: false,
-              timer: 3000,
-              timerProgressBar: true,
-            });
-          },
-          onSettled: () => {
-            setIsLoading(false);
-          },
-        }
-      );
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "error",
-        title: "Something went wrong!",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
-      setIsLoading(false);
-    }
+    register.mutate(
+      { email, password },
+      {
+        onSuccess: () => {
+          login({ email, password });
+          Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "success",
+            title: "Registration Successful",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          setIsLoading(false);
+          // Redirect to verification page
+          router.push(`/verify-code?email=${email}`);
+        },
+        onError: (error: any) => {
+          Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title: error?.response?.data?.message || "Registration Failed",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+          });
+          setIsLoading(false);
+        },
+      },
+    );
   };
 
   return (

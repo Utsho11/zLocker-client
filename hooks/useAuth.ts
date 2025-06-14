@@ -6,21 +6,19 @@ import {
   changedPassAPI,
   fetchProfile,
   forgetAPI,
+  loginAPI,
+  logOutAPI,
   registerAPI,
   resendCodeApi,
   verifyCodeAPI,
 } from "@/api/auth";
 
-// export const useLogin = () => {
-//   return useMutation({
-//     mutationFn: ({ email, password }: { email: string; password: string }) =>
-//       signIn("credentials", {
-//         email,
-//         password,
-//         redirect: false,
-//       }),
-//   });
-// };
+export const useLogin = () => {
+  return useMutation({
+    mutationFn: ({ email, password }: { email: string; password: string }) =>
+      loginAPI(email, password),
+  });
+};
 
 export const useRegister = () => {
   return useMutation({
@@ -41,15 +39,32 @@ export const useProfile = () => {
     queryFn: fetchProfile,
     retry: false,
     staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 };
 
 export const useVerifyCode = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ code, email }: { code: string; email: string }) =>
       verifyCodeAPI(code, email),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+    },
   });
 };
+export const useLogOut = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => logOutAPI(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+    },
+  });
+};
+
 export const useAddUsername = () => {
   const queryClient = useQueryClient();
 

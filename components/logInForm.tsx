@@ -6,14 +6,16 @@ import { Form } from "@heroui/form";
 import { Input } from "@heroui/input";
 import { Eye, EyeClosed } from "lucide-react";
 import Swal from "sweetalert2";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+
+import { useLogin } from "@/hooks/useAuth";
 
 const LogInForm = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
   const router = useRouter();
+  const { mutate: login } = useLogin();
 
   const onSubmit = async (e: any) => {
     e.preventDefault();
@@ -24,46 +26,44 @@ const LogInForm = () => {
     const password = data.password as string;
 
     try {
-      // login({ email, password });
-
-      const res = signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      res
-        .then((response) => {
-          if (response?.ok) {
-            // console.log("Login successful:", response);
-            router.refresh();
+      setIsLoading(true);
+      login(
+        { email, password },
+        {
+          onSuccess: (data) => {
             Swal.fire({
               toast: true,
               position: "top-end",
               icon: "success",
-              title: "Logged in successfully!",
-              showConfirmButton: false,
-              timer: 1500,
-              timerProgressBar: true,
-            });
-            router.push("/dashboard");
-          } else {
-            // console.log("Login failed:", response?.error);
-            Swal.fire({
-              toast: true,
-              position: "top-end",
-              icon: "error",
-              title: "Login Failed!!!",
-              text: response?.error || "Something went wrong",
+              title: "Login Successful",
               showConfirmButton: false,
               timer: 3000,
               timerProgressBar: true,
             });
-          }
-        })
-        .catch((error) => {
-          console.error("Error during sign-in:", error);
-        });
+            setIsLoading(false);
+            // console.log("Login success:", data);
+            const isVerified = data.data.isVerified;
+
+            if (isVerified) {
+              router.push("/dashboard");
+            } else {
+              router.push(`verify-code?email=${data.data.email}`);
+            }
+          },
+          onError: (error: any) => {
+            Swal.fire({
+              toast: true,
+              position: "top-end",
+              icon: "error",
+              title: error || "Login Failed",
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+            });
+            setIsLoading(false);
+          },
+        },
+      );
     } catch (error: any) {
       Swal.fire({
         toast: true,

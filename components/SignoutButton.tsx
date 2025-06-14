@@ -1,15 +1,20 @@
+"use client";
+
 import { Button } from "@heroui/button";
 import { LogOut } from "lucide-react";
-import { getSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
+import { useLogOut } from "@/hooks/useAuth";
+import { useAuthstore } from "@/store/AuthStore";
 export default function SignoutButton() {
-  const handleLogout = async () => {
-    await signOut({
-      redirect: true,
-      callbackUrl: "/",
-    });
+  const { mutate: logOut } = useLogOut();
+  const setLogin = useAuthstore((s) => s.setLogin);
+  const router = useRouter();
 
-    await getSession();
+  const handleLogOut = () => {
+    logOut();
+    setLogin(false);
+    router.push("/");
   };
 
   return (
@@ -18,7 +23,7 @@ export default function SignoutButton() {
       size="sm"
       startContent={<LogOut size={16} />}
       variant="bordered"
-      onPress={handleLogout}
+      onPress={handleLogOut}
     >
       Sign Out
     </Button>

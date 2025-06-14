@@ -1,6 +1,6 @@
 import { jwtDecode, JwtPayload } from "jwt-decode";
 
-interface CustomJwtPayload extends JwtPayload {
+export interface CustomJwtPayload extends JwtPayload {
   id?: string;
   image?: string;
   role: string;
