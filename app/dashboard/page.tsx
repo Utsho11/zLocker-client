@@ -1,58 +1,27 @@
 "use client";
-import { Avatar } from "@heroui/avatar";
-import { useRouter } from "next/navigation";
-import { Button } from "@heroui/button";
-import { EditIcon, FileText, ImageIcon } from "lucide-react";
+import { FileText, ImageIcon } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Spinner } from "@nextui-org/react";
-
-import { useProfile } from "@/hooks/useAuth";
+import { useAuthUser } from "@/lib/useAuthUser";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
+  const { isSignedIn, isLoaded, user } = useAuthUser();
   const router = useRouter();
-  const { data: user, isFetching } = useProfile();
 
-  const { email, name } = user?.data || {};
+  if (!isLoaded) return <p>Loading...</p>;
+  if (!isSignedIn) return <p>Please sign in to view profile.</p>;
 
   const handleNavigate = (path: string) => {
+    // console.log(`Navigating to ${path}`);
+
     router.push(path);
   };
 
   return (
     <div className="w-full px-4 sm:px-8">
-      {/* Profile Header */}
-
-      {isFetching ? (
-        <>
-          <Spinner
-            classNames={{ label: "text-foreground mt-4" }}
-            label="Loading..."
-          />
-        </>
-      ) : (
-        <div className="md:grid md:grid-cols-4 gap-4 text-center space-y-3 border-b-1 border-b-white">
-          <div className="col-span-1 flex justify-center md:justify-start">
-            <Avatar isBordered radius="sm" size="lg" src="/user.png" />
-          </div>
-          <div className="col-span-2 justify-center">
-            <h1 className="text-xl sm:text-3xl font-semibold">
-              Welcome, {name || email}
-            </h1>
-            <p className="text-sm text-gray-500">{email}</p>
-          </div>
-          <div className="col-span-1 flex justify-center md:justify-end">
-            <Button
-              className="w-full sm:w-auto"
-              size="sm"
-              startContent={<EditIcon size={16} />}
-              variant="flat"
-              onPress={() => handleNavigate("/dashboard/editProfile")}
-            >
-              Edit Profile
-            </Button>
-          </div>
-        </div>
-      )}
+      <h1 className="text-2xl font-bold text-center py-6">
+        Welcome back, {user && user.firstName}!
+      </h1>
 
       {/* Cards Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-10 max-w-6xl mx-auto">

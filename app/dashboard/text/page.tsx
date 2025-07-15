@@ -56,10 +56,10 @@ const Page = () => {
       <Card
         isHoverable
         isPressable
-        className="w-full max-w-full sm:max-w-xl md:max-w-2xl border-dashed border-2 border-gray-300 dark:border-gray-600"
+        className="border-dashed border-2 border-gray-300 dark:border-gray-600"
         onPress={() => handleNavigate("/dashboard/text/create")}
       >
-        <CardBody className="flex items-center justify-center text-center h-[25vh]">
+        <CardBody className="flex items-center justify-center text-center md:h-[35vh] md:w-[50vh]">
           <div className="flex flex-col items-center gap-2">
             <div className="bg-primary/10 text-primary p-3 rounded-full">
               <Plus className="w-6 h-6" />

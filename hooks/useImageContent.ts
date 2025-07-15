@@ -1,8 +1,7 @@
 "use client";
+import { useAuth } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AxiosResponse } from "axios";
-
-import { deleteImageApi, getAllImageApi, storeImageApi } from "@/api/image";
+import axios, { AxiosResponse } from "axios";
 
 // Create new content
 type StoreImageResponse = {
@@ -10,11 +9,25 @@ type StoreImageResponse = {
   message: string;
 };
 
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "https://zlocker-server.vercel.app/api";
+
 export const useStoreImage = () => {
   const queryClient = useQueryClient();
+  const { getToken } = useAuth();
 
   return useMutation<AxiosResponse<StoreImageResponse>, Error, FormData>({
-    mutationFn: (file: FormData) => storeImageApi(file),
+    mutationFn: async (file: FormData) => {
+      const token = await getToken();
+
+      return axios.post(`${BACKEND_URL}/image/add-image`, file, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["image"] });
     },
@@ -23,9 +36,23 @@ export const useStoreImage = () => {
 
 // Get all content
 export const useGetAllImage = () => {
+  const { getToken } = useAuth();
+
   return useQuery({
     queryKey: ["image"],
-    queryFn: getAllImageApi,
+    queryFn: async () => {
+      const token = await getToken();
+
+      const res = await axios.get(`${BACKEND_URL}/image/get-all-image`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // console.log(res.data);
+
+      return res.data.data;
+    },
     retry: false,
     staleTime: 0,
   });
@@ -33,9 +60,23 @@ export const useGetAllImage = () => {
 
 export const useDeleteImage = () => {
   const queryClient = useQueryClient();
+  const { getToken } = useAuth();
 
   return useMutation({
-    mutationFn: (id: string) => deleteImageApi(id),
+    mutationFn: async (id: string) => {
+      const token = await getToken();
+
+      const response = await axios.delete(
+        `${BACKEND_URL}/image/delete-image/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["image"] });
     },

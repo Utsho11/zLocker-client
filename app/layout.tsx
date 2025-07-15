@@ -4,12 +4,13 @@ import { Link } from "@heroui/link";
 import clsx from "clsx";
 // import { getServerSession } from "next-auth";
 
+import { ClerkProvider } from "@clerk/nextjs";
+
 import { Providers } from "./providers";
 
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
-import AuthProvider from "@/providers/AuthProvider";
 // import { authOptions } from "@/utils/authOptions";
 
 export const metadata: Metadata = {
@@ -36,16 +37,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning lang="en">
-      <head />
-      <body
-        className={clsx(
-          "min-h-screen bg-background font-sans antialiased",
-          fontSans.variable,
-        )}
-      >
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-          <AuthProvider>
+    <ClerkProvider>
+      <html suppressHydrationWarning lang="en">
+        <head />
+        <body
+          className={clsx(
+            "min-h-screen bg-background font-sans antialiased",
+            fontSans.variable,
+          )}
+        >
+          <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
             <div className="relative flex flex-col h-screen">
               {/* <Navbar session={session} /> */}
               <Navbar />
@@ -65,9 +66,9 @@ export default function RootLayout({
                 </Link>
               </footer>
             </div>
-          </AuthProvider>
-        </Providers>
-      </body>
-    </html>
+          </Providers>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

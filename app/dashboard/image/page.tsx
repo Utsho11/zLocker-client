@@ -23,6 +23,8 @@ const Page = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedImage, setSelectedImage] = useState("");
 
+  console.log(data);
+
   const handleDelete = async (id: string) => {
     const confirm = await Swal.fire({
       title: "Are you sure?",
@@ -40,7 +42,7 @@ const Page = () => {
         Swal.fire(
           "Error",
           error?.message || "Failed to delete image.",
-          "error",
+          "error"
         );
       }
     }

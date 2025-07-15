@@ -8,16 +8,16 @@ import {
   Textarea,
   Button,
 } from "@nextui-org/react";
+import axios from "axios";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { useState } from "react";
 import Swal from "sweetalert2";
 
-import axios from "@/lib/axios";
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };

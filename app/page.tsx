@@ -1,22 +1,12 @@
 "use client";
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalHeader,
-  useDisclosure,
-} from "@heroui/modal";
 import { Divider } from "@heroui/divider";
 import { Button } from "@heroui/button";
 import { BookUser, LogIn } from "lucide-react";
-import Link from "next/link";
+import { SignInButton, SignUpButton } from "@clerk/nextjs";
 
 import { title, subtitle } from "@/components/primitives";
-import LogInForm from "@/components/logInForm";
 
 export default function Home() {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
   return (
     <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
       <div className="relative inline-block max-w-xl text-center justify-center">
@@ -36,16 +26,17 @@ export default function Home() {
         </div>
       </div>
       <div className="">
-        <Button
-          className="hover:bg-gradient-to-r from-gradientStart via-gradientMiddle to-gradientEnd hover:text-white transition-all duration-300 ease-in-out"
-          color="primary"
-          radius="full"
-          startContent={<LogIn />}
-          variant="bordered"
-          onPress={onOpen}
-        >
-          Open your locker
-        </Button>
+        <SignInButton>
+          <Button
+            className="hover:bg-gradient-to-r from-gradientStart via-gradientMiddle to-gradientEnd hover:text-white transition-all duration-300 ease-in-out"
+            color="primary"
+            radius="full"
+            startContent={<LogIn />}
+            variant="bordered"
+          >
+            Open your locker
+          </Button>
+        </SignInButton>
         <div className="flex items-center justify-center gap-2 mt-4">
           <Divider />
           <span>or</span>
@@ -60,7 +51,7 @@ export default function Home() {
           </span>
         </p>
       </div>
-      <Link href="/register">
+      <SignUpButton>
         <Button
           color="primary"
           radius="full"
@@ -69,17 +60,7 @@ export default function Home() {
         >
           Register Now!
         </Button>
-      </Link>
-      <Modal isOpen={isOpen} placement="center" size={"xl"} onClose={onClose}>
-        <ModalContent>
-          <ModalHeader className="flex justify-between items-center gap-1">
-            Open Your Locker
-          </ModalHeader>
-          <ModalBody>
-            <LogInForm />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+      </SignUpButton>
     </section>
   );
 }
