@@ -142,7 +142,7 @@ export default function EditNotePage() {
         timer: 2000,
         showConfirmButton: false,
       });
-      router.push("/dashboard/text");
+      router.push("/dashboard");
     } catch (error) {
       Swal.fire({
         title: "Error",
@@ -207,9 +207,9 @@ export default function EditNotePage() {
             </Button>
           </div>
 
-          <Link href="/dashboard/text">
+          <Link href="/dashboard">
             <Button size="sm" variant="light">
-              Back to Notes
+              Back to Vault
             </Button>
           </Link>
         </div>
@@ -228,7 +228,7 @@ export default function EditNotePage() {
               >
                 {isSubmitting ? "Updating..." : "Update Note"}
               </Button>
-              <Link href="/dashboard/text">
+              <Link href="/dashboard">
                 <Button
                   color="danger"
                   size="sm"

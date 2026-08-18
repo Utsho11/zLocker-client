@@ -57,6 +57,7 @@ import {
   parseNotePayload,
   serializeNotePayload,
 } from "@/lib/crypto";
+import { compressImage } from "@/lib/imageCompressor";
 
 export default function GuestLockerPage() {
   const { lockerId } = useParams<{ lockerId: string }>();
@@ -163,6 +164,15 @@ export default function GuestLockerPage() {
 
   // Tab operations
   const handleAddTab = () => {
+    if (tabs.length >= 3) {
+      Swal.fire({
+        title: "Guest Limit Reached (3 Tabs Max)",
+        text: "Guest lockers support up to 3 tabs. Create a free member vault to unlock 5 tabs, or upgrade to Pro for unlimited tabs!",
+        icon: "info",
+        confirmButtonText: "Got it",
+      });
+      return;
+    }
     const newId = "tab-" + Date.now();
     const newTabTitle = `Tab ${tabs.length + 1}`;
     const newTabs = [...tabs, { id: newId, title: newTabTitle, content: "" }];
@@ -269,18 +279,31 @@ export default function GuestLockerPage() {
     }
   };
 
-  // Upload File Handler
+  // Upload File Handler (Compressed and max 3 files)
   const handleUploadSubmit = async () => {
     if (!selectedUploadFile) return;
 
-    const formData = new FormData();
-    formData.append("file", selectedUploadFile);
+    if ((data?.files?.length || 0) >= 3) {
+      Swal.fire({
+        title: "Guest Storage Limit (3 Files Max)",
+        text: "Guest lockers support up to 3 files/images. Delete existing files or create an account for 5 files!",
+        icon: "info",
+        confirmButtonText: "Got it",
+      });
+      return;
+    }
 
     try {
+      // Auto-compress image before upload to optimize cloud storage
+      const fileToUpload = await compressImage(selectedUploadFile);
+
+      const formData = new FormData();
+      formData.append("file", fileToUpload);
+
       await uploadFile({ lockerId: cleanLockerId, formData });
       Swal.fire({
         icon: "success",
-        title: "Uploaded!",
+        title: "Uploaded & Optimized!",
         text: `"${selectedUploadFile.name}" stored in guest locker.`,
       });
       onCloseUpload();

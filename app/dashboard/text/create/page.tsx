@@ -95,7 +95,7 @@ export default function CreateNotePage() {
         timer: 2000,
         showConfirmButton: false,
       });
-      router.push("/dashboard/text");
+      router.push("/dashboard");
     } catch (error) {
       Swal.fire({
         title: "Error",
@@ -126,7 +126,7 @@ export default function CreateNotePage() {
             >
               {isSubmitting ? "Saving..." : "Save Note"}
             </Button>
-            <Link href="/dashboard/text">
+            <Link href="/dashboard">
               <Button
                 color="danger"
                 size="sm"
