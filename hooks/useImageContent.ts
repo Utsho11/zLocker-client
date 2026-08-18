@@ -4,6 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosResponse } from "axios";
 import { BACKEND_URL } from "@/config/api.config";
 
+type StoreImageResponse = {
+  url: string;
+  message: string;
+};
+
 // Create new content
 
 export const useStoreImage = () => {
