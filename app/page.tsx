@@ -4,19 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
-import { Divider } from "@heroui/divider";
 import {
   ArrowRight,
   Clock,
   Dices,
-  FileText,
   Flame,
   Lock,
   Presentation,
   ShieldCheck,
   Sparkles,
   UserCheck,
-  Zap,
 } from "lucide-react";
 import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
 
