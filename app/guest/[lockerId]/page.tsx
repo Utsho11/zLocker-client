@@ -18,8 +18,10 @@ import {
   Copy,
   Download,
   Eye,
+  EyeOff,
   FileText,
   FileUp,
+  KeyRound,
   Lock,
   Presentation,
   Save,
@@ -32,11 +34,13 @@ import {
   File as FileIcon,
   ExternalLink,
   ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import clipboardCopy from "clipboard-copy";
 
 import RichTextEditor from "@/components/rich-text-editor";
+import NoteTabsManager from "@/components/NoteTabsManager";
 import {
   useDeleteGuestFile,
   useDeleteGuestLocker,
@@ -49,6 +53,9 @@ import {
   decryptZeroKnowledge,
   encryptZeroKnowledge,
   isZeroKnowledgeCiphertext,
+  NoteTab,
+  parseNotePayload,
+  serializeNotePayload,
 } from "@/lib/crypto";
 
 export default function GuestLockerPage() {
@@ -66,12 +73,26 @@ export default function GuestLockerPage() {
   const { mutateAsync: deleteLocker, isPending: isDeletingLocker } =
     useDeleteGuestLocker();
 
-  // State for note editor
-  const [content, setContent] = useState<string>("");
+  // Multi-Tab State
+  const [tabs, setTabs] = useState<NoteTab[]>([
+    { id: "tab-1", title: "Tab 1", content: "" },
+  ]);
+  const [activeTabId, setActiveTabId] = useState<string>("tab-1");
+
+  // Password & Encryption State
   const [passphrase, setPassphrase] = useState<string>("");
+  const [confirmPassphrase, setConfirmPassphrase] = useState<string>("");
+  const [showPasswordInput, setShowPasswordInput] = useState<boolean>(false);
   const [enableLock, setEnableLock] = useState<boolean>(false);
   const [isEncryptedOrigin, setIsEncryptedOrigin] = useState<boolean>(false);
   const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+
+  // Password Setup / Change Modal
+  const {
+    isOpen: isPasswordModalOpen,
+    onOpen: onOpenPasswordModal,
+    onClose: onClosePasswordModal,
+  } = useDisclosure();
 
   // State for file upload modal
   const {
@@ -105,8 +126,11 @@ export default function GuestLockerPage() {
       if (isZeroKnowledgeCiphertext(serverContent)) {
         setIsEncryptedOrigin(true);
         setEnableLock(true);
+        setIsUnlocked(false);
       } else {
-        setContent(serverContent);
+        const parsedTabs = parseNotePayload(serverContent);
+        setTabs(parsedTabs);
+        if (parsedTabs.length > 0) setActiveTabId(parsedTabs[0].id);
         setIsUnlocked(true);
       }
     } else {
@@ -137,39 +161,96 @@ export default function GuestLockerPage() {
     return () => clearInterval(interval);
   }, [data?.expiresAt]);
 
-  // Decrypt Note Handler
+  // Tab operations
+  const handleAddTab = () => {
+    const newId = "tab-" + Date.now();
+    const newTabTitle = `Tab ${tabs.length + 1}`;
+    const newTabs = [...tabs, { id: newId, title: newTabTitle, content: "" }];
+    setTabs(newTabs);
+    setActiveTabId(newId);
+  };
+
+  const handleDeleteTab = (tabId: string) => {
+    const newTabs = tabs.filter((t) => t.id !== tabId);
+    setTabs(newTabs);
+    if (activeTabId === tabId && newTabs.length > 0) {
+      setActiveTabId(newTabs[0].id);
+    }
+  };
+
+  const handleRenameTab = (tabId: string, newTitle: string) => {
+    setTabs((prev) =>
+      prev.map((t) => (t.id === tabId ? { ...t, title: newTitle } : t))
+    );
+  };
+
+  const handleActiveTabContentChange = (newContent: string) => {
+    setTabs((prev) =>
+      prev.map((t) => (t.id === activeTabId ? { ...t, content: newContent } : t))
+    );
+  };
+
+  // Decrypt Note with Password Verification
   const handleDecrypt = async () => {
-    if (!passphrase) {
-      Swal.fire("Passphrase Required", "Enter your passphrase to unlock.", "warning");
+    if (!passphrase.trim()) {
+      Swal.fire("Password Required", "Enter your locker password to decrypt.", "warning");
       return;
     }
 
     if (data?.texts && data.texts.length > 0) {
       const res = await decryptZeroKnowledge(data.texts[0].content, passphrase);
       if (res.success) {
-        setContent(res.text);
+        const parsedTabs = parseNotePayload(res.text);
+        setTabs(parsedTabs);
+        if (parsedTabs.length > 0) setActiveTabId(parsedTabs[0].id);
         setIsUnlocked(true);
+        setEnableLock(true);
         Swal.fire({
           toast: true,
           position: "top-end",
           icon: "success",
-          title: "Note Unlocked!",
+          title: "Locker Decrypted & Verified!",
           timer: 1500,
           showConfirmButton: false,
         });
       } else {
-        Swal.fire("Decryption Failed", res.error || "Incorrect passphrase.", "error");
+        Swal.fire("Password Verification Failed", "Incorrect password. The data could not be decrypted.", "error");
       }
     }
+  };
+
+  // Apply new / changed password
+  const handleApplyPassword = () => {
+    if (!passphrase.trim()) {
+      Swal.fire("Password Required", "Password cannot be empty.", "warning");
+      return;
+    }
+    if (passphrase !== confirmPassphrase) {
+      Swal.fire("Mismatch", "Passwords do not match. Please re-type carefully.", "error");
+      return;
+    }
+
+    setEnableLock(true);
+    onClosePasswordModal();
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "success",
+      title: "Password Set Successfully!",
+      text: "Remember to save your locker to apply encryption.",
+      timer: 2000,
+      showConfirmButton: false,
+    });
   };
 
   // Save Note Handler
   const handleSaveText = async () => {
     try {
+      const serialized = serializeNotePayload(tabs);
       const payload =
         enableLock && passphrase
-          ? await encryptZeroKnowledge(content, passphrase)
-          : content;
+          ? await encryptZeroKnowledge(serialized, passphrase)
+          : serialized;
 
       await saveText({ lockerId: cleanLockerId, content: payload });
 
@@ -177,7 +258,7 @@ export default function GuestLockerPage() {
         toast: true,
         position: "top-end",
         icon: "success",
-        title: enableLock && passphrase ? "Encrypted & Saved!" : "Note Saved!",
+        title: enableLock && passphrase ? "Encrypted & Saved!" : "Locker Saved!",
         text: "24-hour timer refreshed.",
         timer: 2000,
         showConfirmButton: false,
@@ -237,7 +318,7 @@ export default function GuestLockerPage() {
   const handleSelfDestruct = async () => {
     const confirm = await Swal.fire({
       title: "Self-Destruct Locker?",
-      text: "This will permanently destroy all notes and delete all Cloudinary files immediately.",
+      text: "This will permanently destroy all notes, tabs, and Cloudinary files immediately.",
       icon: "error",
       showCancelButton: true,
       confirmButtonText: "Yes, Self-Destruct Now",
@@ -303,26 +384,6 @@ export default function GuestLockerPage() {
         </div>
       );
     }
-    if (type === "docx") {
-      return (
-        <div className="h-40 w-full flex flex-col items-center justify-center bg-blue-500/10 text-blue-500 rounded-lg gap-2">
-          <FileText size={44} />
-          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-500/20">
-            Word Document
-          </span>
-        </div>
-      );
-    }
-    if (type === "xlsx") {
-      return (
-        <div className="h-40 w-full flex flex-col items-center justify-center bg-green-500/10 text-green-500 rounded-lg gap-2">
-          <FileSpreadsheet size={44} />
-          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-green-500/20">
-            Excel Sheet
-          </span>
-        </div>
-      );
-    }
     if (type === "zip") {
       return (
         <div className="h-40 w-full flex flex-col items-center justify-center bg-yellow-500/10 text-yellow-500 rounded-lg gap-2">
@@ -350,6 +411,8 @@ export default function GuestLockerPage() {
     return (bytes / (1024 * 1024)).toFixed(2) + " MB";
   };
 
+  const currentTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center space-y-4">
@@ -373,7 +436,7 @@ export default function GuestLockerPage() {
             </h1>
           </div>
           <p className="text-xs text-default-500">
-            Zero-Knowledge Encrypted &bull; 100% Client-Side &bull; No Login Required
+            ProtectedText Architecture &bull; Multi-Tab Notes &bull; 24h Auto-Purge
           </p>
         </div>
 
@@ -411,11 +474,11 @@ export default function GuestLockerPage() {
       <div className="flex items-center gap-2 p-3 bg-default-100/80 rounded-xl border border-default-200 text-xs text-default-600">
         <ShieldAlert size={16} className="text-primary flex-shrink-0" />
         <span>
-          <strong>24-Hour Privacy Guarantee:</strong> All notes and Cloudinary files uploaded in this guest locker are strictly valid for 24 hours. After expiration, files are automatically destroyed from Cloudinary and the database.
+          <strong>24-Hour Privacy Guarantee:</strong> All tabs and files in this guest locker are valid for 24 hours. After expiration, they are automatically purged from the database and Cloudinary storage.
         </span>
       </div>
 
-      {/* SECTION 1: Zero-Knowledge Secret Note */}
+      {/* SECTION 1: Multi-Tab Zero-Knowledge Secret Note */}
       <Card className="border border-default-200 shadow-sm">
         <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-default-100 p-4">
           <div className="flex items-center gap-2">
@@ -423,77 +486,105 @@ export default function GuestLockerPage() {
               <FileText size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Secret Note</h2>
+              <h2 className="text-lg font-bold">Encrypted Multi-Tab Notes</h2>
               <p className="text-xs text-default-400">
-                ProtectedText client-side encrypted note
+                {tabs.length} {tabs.length === 1 ? "Tab" : "Tabs"} in Locker
               </p>
             </div>
           </div>
 
-          {/* Encryption / Passphrase Controls */}
+          {/* Password Management & Save Actions */}
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <Button
-              size="sm"
-              variant={enableLock ? "flat" : "light"}
-              color={enableLock ? "warning" : "default"}
-              startContent={enableLock ? <Lock size={14} /> : <Unlock size={14} />}
-              onPress={() => setEnableLock(!enableLock)}
-            >
-              {enableLock ? "Passphrase Enabled" : "Add Passphrase"}
-            </Button>
-
-            {enableLock && (
-              <input
-                type="password"
-                placeholder="Set Passphrase"
-                value={passphrase}
-                onChange={(e) => setPassphrase(e.target.value)}
-                className="px-3 py-1 text-xs rounded-lg border border-warning bg-background outline-none w-40"
-              />
-            )}
-
             {isUnlocked && (
-              <Button
-                color="primary"
-                size="sm"
-                isLoading={isSavingText}
-                startContent={!isSavingText && <Save size={15} />}
-                onPress={handleSaveText}
-              >
-                Save Note
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant={enableLock ? "flat" : "light"}
+                  color={enableLock ? "success" : "default"}
+                  startContent={enableLock ? <ShieldCheck size={14} /> : <KeyRound size={14} />}
+                  onPress={() => {
+                    setConfirmPassphrase(passphrase);
+                    onOpenPasswordModal();
+                  }}
+                >
+                  {enableLock ? "Password Active (Change)" : "Set Password"}
+                </Button>
+
+                <Button
+                  color="primary"
+                  size="sm"
+                  isLoading={isSavingText}
+                  startContent={!isSavingText && <Save size={15} />}
+                  onPress={handleSaveText}
+                >
+                  Save All Tabs
+                </Button>
+              </>
             )}
           </div>
         </CardHeader>
 
-        <CardBody className="p-4">
+        <CardBody className="p-4 space-y-4">
+          {/* PASSWORD VERIFICATION SCREEN */}
           {isEncryptedOrigin && !isUnlocked ? (
-            <div className="flex flex-col items-center justify-center p-8 bg-default-50 rounded-xl text-center space-y-4 max-w-sm mx-auto my-6 border border-warning/30">
-              <div className="p-3 bg-warning/10 text-warning rounded-full">
-                <Lock size={32} />
+            <div className="flex flex-col items-center justify-center p-8 bg-default-50 rounded-2xl text-center space-y-5 max-w-md mx-auto my-6 border border-warning/40 shadow-sm">
+              <div className="p-4 bg-warning/10 text-warning rounded-full">
+                <Lock size={36} />
               </div>
-              <div>
-                <h3 className="text-base font-bold">This Note is Encrypted</h3>
-                <p className="text-xs text-default-500 mt-1">
-                  Enter the locker passphrase to decrypt and view the note.
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold">This Locker is Protected</h3>
+                <p className="text-xs text-default-500 max-w-xs mx-auto">
+                  Enter the locker password to verify and decrypt all notes and tabs.
                 </p>
               </div>
-              <div className="flex gap-2 w-full">
-                <input
-                  type="password"
-                  placeholder="Enter Passphrase"
-                  value={passphrase}
-                  onChange={(e) => setPassphrase(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleDecrypt()}
-                  className="w-full px-3 py-2 text-xs border border-default-300 rounded-lg bg-background outline-none focus:border-primary"
-                />
-                <Button color="primary" size="sm" onPress={handleDecrypt}>
-                  Unlock
+
+              <div className="space-y-3 w-full">
+                <div className="relative flex items-center">
+                  <input
+                    type={showPasswordInput ? "text" : "password"}
+                    placeholder="Enter Locker Password"
+                    value={passphrase}
+                    onChange={(e) => setPassphrase(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleDecrypt()}
+                    className="w-full px-3.5 py-2.5 pr-10 text-sm border border-default-300 rounded-xl bg-background outline-none focus:border-primary transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordInput(!showPasswordInput)}
+                    className="absolute right-3 text-default-400 hover:text-foreground"
+                  >
+                    {showPasswordInput ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                <Button
+                  color="primary"
+                  className="w-full font-semibold"
+                  onPress={handleDecrypt}
+                >
+                  Decrypt & Open Locker
                 </Button>
               </div>
             </div>
           ) : (
-            <RichTextEditor content={content} onChange={setContent} />
+            <>
+              {/* Note Tabs Manager Bar */}
+              <NoteTabsManager
+                tabs={tabs}
+                activeTabId={activeTabId}
+                onSelectTab={setActiveTabId}
+                onAddTab={handleAddTab}
+                onDeleteTab={handleDeleteTab}
+                onRenameTab={handleRenameTab}
+              />
+
+              {/* Active Tab Editor */}
+              <RichTextEditor
+                key={activeTabId}
+                content={currentTab?.content || ""}
+                onChange={handleActiveTabContentChange}
+              />
+            </>
           )}
         </CardBody>
       </Card>
@@ -637,6 +728,62 @@ export default function GuestLockerPage() {
           ))}
         </div>
       </div>
+
+      {/* Modal: Set / Change Password with Verification */}
+      <Modal
+        backdrop="blur"
+        isOpen={isPasswordModalOpen}
+        placement="center"
+        onClose={onClosePasswordModal}
+      >
+        <ModalContent>
+          <ModalHeader className="flex items-center gap-2">
+            <KeyRound size={20} className="text-primary" />
+            <span>Set Locker Password</span>
+          </ModalHeader>
+          <ModalBody className="space-y-4">
+            <p className="text-xs text-default-500">
+              Your password will encrypt all tabs with 256-bit AES-GCM. We never store your password on our servers.
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-default-600 block mb-1">
+                  New Password:
+                </label>
+                <input
+                  type="password"
+                  placeholder="Enter secret password"
+                  value={passphrase}
+                  onChange={(e) => setPassphrase(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-default-300 rounded-lg bg-background outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-default-600 block mb-1">
+                  Confirm Password:
+                </label>
+                <input
+                  type="password"
+                  placeholder="Re-enter password for verification"
+                  value={confirmPassphrase}
+                  onChange={(e) => setConfirmPassphrase(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-default-300 rounded-lg bg-background outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={onClosePasswordModal}>
+              Cancel
+            </Button>
+            <Button color="primary" onPress={handleApplyPassword}>
+              Apply Password
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       {/* Modal: Upload File */}
       <Modal

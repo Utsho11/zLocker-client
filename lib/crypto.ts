@@ -3,6 +3,16 @@
  * Uses native Web Crypto API (window.crypto.subtle) - AES-GCM 256-bit + PBKDF2
  */
 
+export interface NoteTab {
+  id: string;
+  title: string;
+  content: string;
+}
+
+export interface LockerDataPayload {
+  tabs: NoteTab[];
+}
+
 // Helper to convert ArrayBuffer to Base64
 function bufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
@@ -138,4 +148,29 @@ export async function decryptZeroKnowledge(
       error: "Incorrect passphrase. Unable to decrypt note.",
     };
   }
+}
+
+/**
+ * Parse tabs from decrypted content string (with backwards compatibility for legacy notes)
+ */
+export function parseNotePayload(rawText: string): NoteTab[] {
+  if (!rawText || !rawText.trim()) {
+    return [{ id: "tab-" + Date.now(), title: "Tab 1", content: "" }];
+  }
+  try {
+    const parsed = JSON.parse(rawText);
+    if (parsed && Array.isArray(parsed.tabs) && parsed.tabs.length > 0) {
+      return parsed.tabs;
+    }
+  } catch {
+    // Legacy single string note
+  }
+  return [{ id: "tab-" + Date.now(), title: "Tab 1", content: rawText }];
+}
+
+/**
+ * Serialize tabs into JSON string before encryption or saving
+ */
+export function serializeNotePayload(tabs: NoteTab[]): string {
+  return JSON.stringify({ tabs });
 }

@@ -1,17 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Modal, ModalBody, ModalContent, useDisclosure } from "@heroui/modal";
 import clipboardCopy from "clipboard-copy";
-import { ClipboardCheck, Copy, Edit, EyeIcon, Lock, Trash, Unlock } from "lucide-react";
-import { useState } from "react";
+import { ClipboardCheck, Copy, Edit, EyeIcon, Lock, Trash, Unlock, Layers } from "lucide-react";
 import Swal from "sweetalert2";
-import { isZeroKnowledgeCiphertext, decryptZeroKnowledge } from "@/lib/crypto";
+
+import { isZeroKnowledgeCiphertext, decryptZeroKnowledge, parseNotePayload, NoteTab } from "@/lib/crypto";
 
 type ContentCardProps = {
   title: string;
-  content: string; // HTML or Encrypted content
+  content: string; // HTML, JSON, or Encrypted content
   onEdit: () => void;
   onDelete: () => void;
 };
@@ -24,17 +25,21 @@ export const ContentCard: React.FC<ContentCardProps> = ({
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [copied, setCopied] = useState(false);
-  const [decryptedHtml, setDecryptedHtml] = useState<string | null>(null);
+  const [decryptedRaw, setDecryptedRaw] = useState<string | null>(null);
   const [passphrase, setPassphrase] = useState("");
-  const isEncrypted = isZeroKnowledgeCiphertext(content);
+  const [activeModalTabId, setActiveModalTabId] = useState<string>("");
 
-  const displayContent = decryptedHtml !== null ? decryptedHtml : content;
+  const isEncrypted = isZeroKnowledgeCiphertext(content);
+  const rawPayload = decryptedRaw !== null ? decryptedRaw : isEncrypted ? "" : content;
+  const tabs: NoteTab[] = rawPayload ? parseNotePayload(rawPayload) : [];
+
+  const currentTab = tabs.find((t) => t.id === activeModalTabId) || tabs[0];
 
   const handleUnlock = async () => {
-    if (!passphrase) {
+    if (!passphrase.trim()) {
       Swal.fire({
-        title: "Passphrase Required",
-        text: "Please enter the passphrase to decrypt this note.",
+        title: "Password Required",
+        text: "Please enter the password to decrypt this note.",
         icon: "warning",
       });
       return;
@@ -42,11 +47,13 @@ export const ContentCard: React.FC<ContentCardProps> = ({
 
     const res = await decryptZeroKnowledge(content, passphrase);
     if (res.success) {
-      setDecryptedHtml(res.text);
+      setDecryptedRaw(res.text);
+      const parsedTabs = parseNotePayload(res.text);
+      if (parsedTabs.length > 0) setActiveModalTabId(parsedTabs[0].id);
       Swal.fire({
         toast: true,
         position: "top-end",
-        title: "Note Unlocked!",
+        title: "Password Verified & Unlocked!",
         icon: "success",
         timer: 1500,
         showConfirmButton: false,
@@ -54,14 +61,14 @@ export const ContentCard: React.FC<ContentCardProps> = ({
     } else {
       Swal.fire({
         title: "Decryption Failed",
-        text: res.error || "Incorrect passphrase.",
+        text: "Incorrect password. Unable to unlock note.",
         icon: "error",
       });
     }
   };
 
   const handleCopy = async () => {
-    const rawText = displayContent.replace(/<[^>]+>/g, "");
+    const rawText = currentTab ? currentTab.content.replace(/<[^>]+>/g, "") : "";
     await clipboardCopy(rawText);
     Swal.fire({
       toast: true,
@@ -75,15 +82,20 @@ export const ContentCard: React.FC<ContentCardProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Remove HTML tags and truncate preview
-  const plainPreview = isEncrypted && decryptedHtml === null
-    ? "🔒 Encrypted Note (ProtectedText format). Click to unlock."
-    : displayContent.replace(/<[^>]*>/g, "");
+  // Preview text for card body
+  const previewText = (() => {
+    if (isEncrypted && decryptedRaw === null) {
+      return "🔒 Encrypted Note (ProtectedText format). Click to verify password.";
+    }
+    if (tabs.length > 0) {
+      const combined = tabs.map((t) => `${t.title}: ${t.content.replace(/<[^>]*>/g, " ")}`).join(" | ");
+      return combined.trim() || "Empty note";
+    }
+    return content.replace(/<[^>]*>/g, " ").trim() || "Empty note";
+  })();
 
   const truncatedContent =
-    plainPreview.length > 180
-      ? plainPreview.slice(0, 180).trim() + "..."
-      : plainPreview;
+    previewText.length > 180 ? previewText.slice(0, 180).trim() + "..." : previewText;
 
   return (
     <>
@@ -94,12 +106,14 @@ export const ContentCard: React.FC<ContentCardProps> = ({
       >
         <CardHeader className="flex justify-between items-center pb-1">
           <div className="flex items-center gap-2">
-            {isEncrypted && decryptedHtml === null ? (
-              <Lock size={16} className="text-warning" />
+            {isEncrypted && decryptedRaw === null ? (
+              <Lock size={16} className="text-warning flex-shrink-0" />
             ) : isEncrypted ? (
-              <Unlock size={16} className="text-success" />
+              <Unlock size={16} className="text-success flex-shrink-0" />
+            ) : tabs.length > 1 ? (
+              <Layers size={16} className="text-primary flex-shrink-0" />
             ) : null}
-            <h3 className="text-base font-semibold">{title}</h3>
+            <h3 className="text-base font-semibold truncate max-w-[180px]">{title}</h3>
           </div>
           <div className="flex gap-0.5">
             <Button
@@ -140,28 +154,28 @@ export const ContentCard: React.FC<ContentCardProps> = ({
         isOpen={isOpen}
         placement="center"
         scrollBehavior="inside"
-        size="lg"
+        size="2xl"
         onClose={onClose}
       >
         <ModalContent>
-          {(onClose) => (
+          {() => (
             <>
-              <ModalBody className="py-6">
-                {isEncrypted && decryptedHtml === null ? (
+              <ModalBody className="py-6 space-y-4">
+                {isEncrypted && decryptedRaw === null ? (
                   <div className="flex flex-col items-center justify-center gap-4 py-8 text-center">
                     <div className="p-4 bg-warning/10 text-warning rounded-full">
                       <Lock size={32} />
                     </div>
                     <div>
-                      <h4 className="text-lg font-bold">Encrypted Zero-Knowledge Note</h4>
+                      <h4 className="text-lg font-bold">Password-Protected Note</h4>
                       <p className="text-xs text-default-500 mt-1">
-                        Enter the passphrase to decrypt this note in your browser.
+                        Enter the password to verify and decrypt all tabs.
                       </p>
                     </div>
                     <div className="flex gap-2 w-full max-w-sm">
                       <input
                         type="password"
-                        placeholder="Enter Locker Passphrase"
+                        placeholder="Enter Locker Password"
                         value={passphrase}
                         onChange={(e) => setPassphrase(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
@@ -174,16 +188,42 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                   </div>
                 ) : (
                   <>
+                    {/* Tab Bar in Modal Preview */}
+                    {tabs.length > 1 && (
+                      <div className="flex items-center gap-1 border-b border-default-200 pb-1 overflow-x-auto">
+                        {tabs.map((tab) => {
+                          const isActive = (activeModalTabId || tabs[0].id) === tab.id;
+                          return (
+                            <button
+                              key={tab.id}
+                              onClick={() => setActiveModalTabId(tab.id)}
+                              className={`px-3 py-1 text-xs font-semibold rounded-t-lg transition-colors border-t border-x ${
+                                isActive
+                                  ? "bg-background border-default-300 text-primary -mb-[1px] border-b-0"
+                                  : "bg-default-100/70 border-transparent text-default-500 hover:bg-default-200/60"
+                              }`}
+                            >
+                              {tab.title}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     <div
-                      dangerouslySetInnerHTML={{ __html: displayContent }}
-                      className="prose dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: currentTab?.content || "" }}
+                      className="prose dark:prose-invert max-w-none min-h-[150px]"
                     />
-                    <div className="flex justify-end pt-4">
+
+                    <div className="flex justify-between items-center pt-4 border-t border-default-100">
+                      <span className="text-xs text-default-400">
+                        {tabs.length > 1 ? `Viewing Tab: ${currentTab?.title}` : ""}
+                      </span>
                       <Button
                         isIconOnly
                         color="primary"
                         size="sm"
-                        title="Copy Content"
+                        title="Copy Tab Content"
                         variant="flat"
                         onPress={handleCopy}
                       >

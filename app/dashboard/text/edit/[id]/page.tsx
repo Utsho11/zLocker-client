@@ -5,22 +5,33 @@ import Swal from "sweetalert2";
 import { Button } from "@heroui/button";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Plus, Unlock, X } from "lucide-react";
+import { Eye, EyeOff, Lock, Plus, Unlock, X, KeyRound, ShieldCheck } from "lucide-react";
 
 import { useGetContent, useUpdateContent } from "@/hooks/useContent";
 import RichTextEditor from "@/components/rich-text-editor";
+import NoteTabsManager from "@/components/NoteTabsManager";
 import {
   isZeroKnowledgeCiphertext,
   decryptZeroKnowledge,
   encryptZeroKnowledge,
+  NoteTab,
+  parseNotePayload,
+  serializeNotePayload,
 } from "@/lib/crypto";
 
-const Page = () => {
+export default function EditNotePage() {
   const { id } = useParams();
   const router = useRouter();
 
   const { data, isPending, isLoading } = useGetContent(id as string);
-  const [content, setContent] = useState<string>("");
+
+  // Multi-Tab State
+  const [tabs, setTabs] = useState<NoteTab[]>([
+    { id: "tab-1", title: "Tab 1", content: "" },
+  ]);
+  const [activeTabId, setActiveTabId] = useState<string>("tab-1");
+
+  // Password & Decryption State
   const [passphrase, setPassphrase] = useState<string>("");
   const [showPassphrase, setShowPassphrase] = useState<boolean>(false);
   const [enableLock, setEnableLock] = useState<boolean>(false);
@@ -36,57 +47,97 @@ const Page = () => {
       if (isZeroKnowledgeCiphertext(data.content)) {
         setIsEncryptedOrigin(true);
         setEnableLock(true);
+        setIsUnlocked(false);
       } else {
-        setContent(data.content);
+        const parsedTabs = parseNotePayload(data.content);
+        setTabs(parsedTabs);
+        if (parsedTabs.length > 0) setActiveTabId(parsedTabs[0].id);
         setIsUnlocked(true);
       }
     }
   }, [data]);
 
+  // Tab operations
+  const handleAddTab = () => {
+    const newId = "tab-" + Date.now();
+    const newTabTitle = `Tab ${tabs.length + 1}`;
+    const newTabs = [...tabs, { id: newId, title: newTabTitle, content: "" }];
+    setTabs(newTabs);
+    setActiveTabId(newId);
+  };
+
+  const handleDeleteTab = (tabId: string) => {
+    const newTabs = tabs.filter((t) => t.id !== tabId);
+    setTabs(newTabs);
+    if (activeTabId === tabId && newTabs.length > 0) {
+      setActiveTabId(newTabs[0].id);
+    }
+  };
+
+  const handleRenameTab = (tabId: string, newTitle: string) => {
+    setTabs((prev) =>
+      prev.map((t) => (t.id === tabId ? { ...t, title: newTitle } : t))
+    );
+  };
+
+  const handleActiveTabContentChange = (newContent: string) => {
+    setTabs((prev) =>
+      prev.map((t) => (t.id === activeTabId ? { ...t, content: newContent } : t))
+    );
+  };
+
+  // Password verification & decryption
   const handleDecryptNote = async () => {
-    if (!passphrase) {
-      Swal.fire("Passphrase Required", "Please enter your passphrase.", "warning");
+    if (!passphrase.trim()) {
+      Swal.fire("Password Required", "Please enter your password to unlock.", "warning");
       return;
     }
 
     const res = await decryptZeroKnowledge(data.content, passphrase);
     if (res.success) {
-      setContent(res.text);
+      const parsedTabs = parseNotePayload(res.text);
+      setTabs(parsedTabs);
+      if (parsedTabs.length > 0) setActiveTabId(parsedTabs[0].id);
       setIsUnlocked(true);
+      setEnableLock(true);
       Swal.fire({
         toast: true,
         position: "top-end",
-        title: "Note Decrypted!",
+        title: "Note Decrypted & Verified!",
         icon: "success",
         timer: 1500,
         showConfirmButton: false,
       });
     } else {
-      Swal.fire("Decryption Failed", res.error || "Incorrect passphrase.", "error");
+      Swal.fire("Password Verification Failed", "Incorrect password. The note could not be decrypted.", "error");
     }
   };
 
-  if (isPending || isLoading) {
-    return (
-      <div className="flex justify-center items-center py-20 text-default-500">
-        <p>Loading note...</p>
-      </div>
-    );
-  }
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    const hasAnyContent = tabs.some((t) => t.content.trim().length > 0);
+    if (!hasAnyContent) {
+      Swal.fire("Empty Note", "Please write some content before updating.", "info");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const payload = enableLock && passphrase
-        ? await encryptZeroKnowledge(content, passphrase)
-        : content;
+      const serialized = serializeNotePayload(tabs);
+      const payload =
+        enableLock && passphrase
+          ? await encryptZeroKnowledge(serialized, passphrase)
+          : serialized;
 
       await updateContent({ id: id as string, content: payload });
+
       Swal.fire({
-        title: "Success!",
-        text: "Content updated successfully.",
+        title: "Updated!",
+        text: enableLock && passphrase
+          ? "Multi-tab note encrypted and saved successfully!"
+          : "Note updated successfully.",
         icon: "success",
         timer: 2000,
         showConfirmButton: false,
@@ -95,7 +146,7 @@ const Page = () => {
     } catch (error) {
       Swal.fire({
         title: "Error",
-        text: "Something went wrong while updating the content.",
+        text: "Something went wrong while updating the note.",
         icon: "error",
         confirmButtonText: "OK",
       });
@@ -104,32 +155,58 @@ const Page = () => {
     }
   };
 
+  if (isPending || isLoading) {
+    return (
+      <div className="flex justify-center items-center py-24 text-default-500">
+        <p>Loading note...</p>
+      </div>
+    );
+  }
+
+  const currentTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
+
   return (
     <div className="max-w-5xl mx-auto space-y-4">
       {isEncryptedOrigin && !isUnlocked ? (
-        <div className="flex flex-col items-center justify-center p-8 bg-default-100/70 border border-default-200 rounded-2xl text-center space-y-4 max-w-md mx-auto my-12">
+        <div className="flex flex-col items-center justify-center p-8 bg-default-50 rounded-2xl text-center space-y-5 max-w-md mx-auto my-12 border border-warning/40 shadow-sm">
           <div className="p-4 bg-warning/10 text-warning rounded-full">
             <Lock size={36} />
           </div>
-          <div>
-            <h3 className="text-lg font-bold">Encrypted Zero-Knowledge Note</h3>
-            <p className="text-xs text-default-500 mt-1">
-              Enter your passphrase to decrypt and edit this note.
+          <div className="space-y-1">
+            <h3 className="text-lg font-bold">This Note is Encrypted</h3>
+            <p className="text-xs text-default-500 max-w-xs mx-auto">
+              Enter your password to verify and decrypt the note and its tabs.
             </p>
           </div>
-          <div className="flex gap-2 w-full">
-            <input
-              type="password"
-              placeholder="Enter Passphrase"
-              value={passphrase}
-              onChange={(e) => setPassphrase(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleDecryptNote()}
-              className="w-full px-3 py-2 text-sm border border-default-300 rounded-lg bg-background outline-none focus:border-primary"
-            />
-            <Button color="primary" onPress={handleDecryptNote}>
-              Decrypt
+
+          <div className="space-y-3 w-full">
+            <div className="relative flex items-center">
+              <input
+                type={showPassphrase ? "text" : "password"}
+                placeholder="Enter password"
+                value={passphrase}
+                onChange={(e) => setPassphrase(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleDecryptNote()}
+                className="w-full px-3.5 py-2.5 pr-10 text-sm border border-default-300 rounded-xl bg-background outline-none focus:border-primary transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassphrase(!showPassphrase)}
+                className="absolute right-3 text-default-400 hover:text-foreground"
+              >
+                {showPassphrase ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+
+            <Button
+              color="primary"
+              className="w-full font-semibold"
+              onPress={handleDecryptNote}
+            >
+              Decrypt & Open Note
             </Button>
           </div>
+
           <Link href="/dashboard/text">
             <Button size="sm" variant="light">
               Back to Notes
@@ -167,11 +244,11 @@ const Page = () => {
               <Button
                 size="sm"
                 variant={enableLock ? "flat" : "light"}
-                color={enableLock ? "warning" : "default"}
-                startContent={enableLock ? <Lock size={14} /> : <Unlock size={14} />}
+                color={enableLock ? "success" : "default"}
+                startContent={enableLock ? <ShieldCheck size={14} /> : <KeyRound size={14} />}
                 onPress={() => setEnableLock(!enableLock)}
               >
-                {enableLock ? "Protected with Passphrase" : "No Passphrase"}
+                {enableLock ? "Password Protected" : "Add Password"}
               </Button>
 
               {enableLock && (
@@ -195,13 +272,25 @@ const Page = () => {
             </div>
           </div>
 
+          {/* Multi-Tab Note Container */}
           <div className="space-y-2">
-            <RichTextEditor content={content} onChange={setContent} />
+            <NoteTabsManager
+              tabs={tabs}
+              activeTabId={activeTabId}
+              onSelectTab={setActiveTabId}
+              onAddTab={handleAddTab}
+              onDeleteTab={handleDeleteTab}
+              onRenameTab={handleRenameTab}
+            />
+
+            <RichTextEditor
+              key={activeTabId}
+              content={currentTab?.content || ""}
+              onChange={handleActiveTabContentChange}
+            />
           </div>
         </form>
       )}
     </div>
   );
-};
-
-export default Page;
+}
