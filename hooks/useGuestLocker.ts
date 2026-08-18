@@ -2,9 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api";
+import { BACKEND_URL } from "@/config/api.config";
 
 export interface GuestFileItem {
   _id: string;

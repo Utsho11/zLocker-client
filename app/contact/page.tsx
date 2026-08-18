@@ -7,10 +7,7 @@ import axios from "axios";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { useState } from "react";
 import Swal from "sweetalert2";
-
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "https://zlocker-server.vercel.app/api";
+import { BACKEND_URL } from "@/config/api.config";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });

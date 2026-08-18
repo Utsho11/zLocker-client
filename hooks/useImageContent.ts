@@ -2,16 +2,9 @@
 import { useAuth } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosResponse } from "axios";
+import { BACKEND_URL } from "@/config/api.config";
 
 // Create new content
-type StoreImageResponse = {
-  url: string;
-  message: string;
-};
-
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "https://zlocker-server.vercel.app/api";
 
 export const useStoreImage = () => {
   const queryClient = useQueryClient();

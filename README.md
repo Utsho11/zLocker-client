@@ -109,14 +109,13 @@ sequenceDiagram
    ```env
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
    CLERK_SECRET_KEY=sk_test_...
-   NEXT_PUBLIC_BACKEND_URL=http://localhost:5000/api
+   NEXT_PUBLIC_BACKEND_URL=https://your-backend-api.vercel.app/api
    ```
 
 4. **Run Development Server:**
    ```bash
    npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
