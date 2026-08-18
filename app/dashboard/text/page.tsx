@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardBody, Spinner } from "@nextui-org/react"; // Make sure this matches your UI lib
-import { Plus } from "lucide-react";
+import { Card, CardBody } from "@heroui/card";
+import { Lock, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 
@@ -15,10 +15,9 @@ const Page = () => {
 
   if (isPending) {
     return (
-      <Spinner
-        classNames={{ label: "text-foreground mt-4" }}
-        label="Loading..."
-      />
+      <div className="flex justify-center items-center py-20 text-default-500">
+        <p>Loading your secret notes...</p>
+      </div>
     );
   }
 
@@ -60,34 +59,47 @@ const Page = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <Card
-        isHoverable
-        isPressable
-        className="border-dashed border-2 border-gray-300 dark:border-gray-600"
-        onPress={() => handleNavigate("/dashboard/text/create")}
-      >
-        <CardBody className="flex items-center justify-center text-center md:h-[35vh] md:w-[50vh]">
-          <div className="flex flex-col items-center gap-2">
-            <div className="bg-primary/10 text-primary p-3 rounded-full">
-              <Plus className="w-6 h-6" />
-            </div>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Add New Note
-            </p>
-          </div>
-        </CardBody>
-      </Card>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <div>
+          <h2 className="text-2xl font-bold">Zero-Knowledge Notes</h2>
+          <p className="text-sm text-default-500">
+            ProtectedText-style client-side encryption ({data.length} notes)
+          </p>
+        </div>
+      </div>
 
-      {data.map((ele: any, i: number) => (
-        <ContentCard
-          key={ele._id}
-          content={ele.content}
-          title={`Note ${i + 1}`}
-          onDelete={() => handleDelete(ele._id)}
-          onEdit={() => handleEdit(ele._id)}
-        />
-      ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card
+          isPressable
+          className="border-dashed border-2 border-default-300 hover:border-primary transition-all min-h-[140px]"
+          onPress={() => handleNavigate("/dashboard/text/create")}
+        >
+          <CardBody className="flex items-center justify-center text-center p-6">
+            <div className="flex flex-col items-center gap-2">
+              <div className="bg-primary/10 text-primary p-3 rounded-full">
+                <Plus className="w-6 h-6" />
+              </div>
+              <p className="text-sm font-semibold text-foreground">
+                Add New Note
+              </p>
+              <p className="text-xs text-default-400">
+                Supports optional Zero-Knowledge Passphrase
+              </p>
+            </div>
+          </CardBody>
+        </Card>
+
+        {data.map((ele: any, i: number) => (
+          <ContentCard
+            key={ele._id}
+            content={ele.content}
+            title={`Note ${i + 1}`}
+            onDelete={() => handleDelete(ele._id)}
+            onEdit={() => handleEdit(ele._id)}
+          />
+        ))}
+      </div>
     </div>
   );
 };

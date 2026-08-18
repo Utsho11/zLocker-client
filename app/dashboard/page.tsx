@@ -25,39 +25,48 @@ export default function DashboardPage() {
 
       {/* Cards Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-10 max-w-6xl mx-auto">
-        {/* Text Card */}
+        {/* Zero-Knowledge Notes Card */}
         <Card
           isPressable
-          className="hover:shadow-lg hover:shadow-gradientStart hover:scale-[1.02] transition-all duration-300"
+          className="hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all duration-300 border border-default-200"
           onPress={() => handleNavigate("/dashboard/text")}
         >
-          <CardHeader className="flex items-center gap-3">
-            <FileText className="text-blue-600" size={24} />
-            <h3 className="text-lg font-semibold">Text-Based Content</h3>
+          <CardHeader className="flex items-center gap-3 pb-2">
+            <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
+              <FileText size={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Zero-Knowledge Notes</h3>
+              <p className="text-xs text-default-400">Client-Side Encrypted (ProtectedText Style)</p>
+            </div>
           </CardHeader>
           <CardBody>
-            <p className="text-gray-600 text-sm">
-              Securely store and organize your plain text content for easy
-              access anytime. Ideal for saving notes, snippets, and important
-              written information.
+            <p className="text-default-600 text-sm leading-relaxed">
+              Create and manage private rich-text notes encrypted directly in your browser.
+              Protected with AES-GCM encryption so only you can unlock your notes.
             </p>
           </CardBody>
         </Card>
 
-        {/* Image Card */}
+        {/* Multi-File Cloud Locker Card */}
         <Card
           isPressable
-          className="hover:shadow-green-600 hover:shadow-lg hover:scale-[1.02] transition-all duration-300"
+          className="hover:shadow-lg hover:shadow-secondary/20 hover:scale-[1.02] transition-all duration-300 border border-default-200"
           onPress={() => handleNavigate("/dashboard/image")}
         >
-          <CardHeader className="flex items-center gap-3">
-            <ImageIcon className="text-green-600" size={24} />
-            <h3 className="text-lg font-semibold">Image Gallery</h3>
+          <CardHeader className="flex items-center gap-3 pb-2">
+            <div className="p-2.5 bg-secondary/10 text-secondary rounded-xl">
+              <ImageIcon size={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Cloud File Locker</h3>
+              <p className="text-xs text-default-400">Images, PDFs, PPTX, Docs, ZIPs</p>
+            </div>
           </CardHeader>
           <CardBody>
-            <p className="text-gray-600 text-sm">
-              Upload and store beautiful images in your personalized gallery.
-              Perfect for portfolios and collections.
+            <p className="text-default-600 text-sm leading-relaxed">
+              Store, view, and organize all your files in your dedicated Cloudinary locker.
+              Supports image lightboxes, document downloads, and instant link sharing.
             </p>
           </CardBody>
         </Card>
