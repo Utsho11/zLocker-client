@@ -5,6 +5,10 @@ export const siteConfig = {
   description: "A simple and secure text-image storing platform.",
   navItems: [
     {
+      label: "Guest Locker",
+      href: "/guest",
+    },
+    {
       label: "Docs",
       href: "/docs",
     },
