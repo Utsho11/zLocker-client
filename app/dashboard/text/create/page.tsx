@@ -1,3 +1,5 @@
+"use client";
+
 import { FormEvent, useState } from "react";
 import { Lock, Plus, X } from "lucide-react";
 import Link from "next/link";

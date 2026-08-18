@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, FormEvent } from "react";
 import Swal from "sweetalert2";
 import { Button } from "@heroui/button";
