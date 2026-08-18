@@ -120,24 +120,53 @@ export default function GuestLockerPage() {
   // Time remaining countdown state
   const [timeLeft, setTimeLeft] = useState<string>("24h 00m 00s");
 
-  // Synchronize initial text content from server
+  // Synchronize initial text content from server and handle password initialization
   useEffect(() => {
+    const storedPass =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem(`zlocker_pass_${cleanLockerId}`)
+        : null;
+
+    if (storedPass) {
+      setPassphrase(storedPass);
+      setConfirmPassphrase(storedPass);
+    }
+
     if (data?.texts && data.texts.length > 0) {
       const serverContent = data.texts[0].content;
       if (isZeroKnowledgeCiphertext(serverContent)) {
         setIsEncryptedOrigin(true);
         setEnableLock(true);
-        setIsUnlocked(false);
+
+        if (storedPass) {
+          decryptZeroKnowledge(serverContent, storedPass).then((res) => {
+            if (res.success) {
+              const parsedTabs = parseNotePayload(res.text);
+              setTabs(parsedTabs);
+              if (parsedTabs.length > 0) setActiveTabId(parsedTabs[0].id);
+              setIsUnlocked(true);
+            } else {
+              setIsUnlocked(false);
+            }
+          });
+        } else {
+          setIsUnlocked(false);
+        }
       } else {
         const parsedTabs = parseNotePayload(serverContent);
         setTabs(parsedTabs);
         if (parsedTabs.length > 0) setActiveTabId(parsedTabs[0].id);
         setIsUnlocked(true);
       }
-    } else {
+    } else if (!isLoading) {
+      // NEW GUEST LOCKER
       setIsUnlocked(true);
+      setEnableLock(true);
+      if (!storedPass) {
+        onOpenPasswordModal();
+      }
     }
-  }, [data]);
+  }, [data, isLoading, cleanLockerId]);
 
   // Live countdown timer for 24-hour expiration
   useEffect(() => {
@@ -215,6 +244,9 @@ export default function GuestLockerPage() {
         if (parsedTabs.length > 0) setActiveTabId(parsedTabs[0].id);
         setIsUnlocked(true);
         setEnableLock(true);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(`zlocker_pass_${cleanLockerId}`, passphrase);
+        }
         Swal.fire({
           toast: true,
           position: "top-end",
@@ -241,6 +273,9 @@ export default function GuestLockerPage() {
     }
 
     setEnableLock(true);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`zlocker_pass_${cleanLockerId}`, passphrase);
+    }
     onClosePasswordModal();
     Swal.fire({
       toast: true,
@@ -253,22 +288,35 @@ export default function GuestLockerPage() {
     });
   };
 
-  // Save Note Handler
+  // Save Note Handler (Enforces password)
   const handleSaveText = async () => {
+    if (!passphrase.trim()) {
+      Swal.fire({
+        title: "Password Required",
+        text: "Please set a password to encrypt and secure your guest locker before saving.",
+        icon: "warning",
+        confirmButtonText: "Set Password Now",
+      }).then(() => {
+        onOpenPasswordModal();
+      });
+      return;
+    }
+
     try {
       const serialized = serializeNotePayload(tabs);
-      const payload =
-        enableLock && passphrase
-          ? await encryptZeroKnowledge(serialized, passphrase)
-          : serialized;
+      const payload = await encryptZeroKnowledge(serialized, passphrase);
 
       await saveText({ lockerId: cleanLockerId, content: payload });
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(`zlocker_pass_${cleanLockerId}`, passphrase);
+      }
 
       Swal.fire({
         toast: true,
         position: "top-end",
         icon: "success",
-        title: enableLock && passphrase ? "Encrypted & Saved!" : "Locker Saved!",
+        title: "Encrypted & Saved with Password!",
         text: "24-hour timer refreshed.",
         timer: 2000,
         showConfirmButton: false,

@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
-import { ArrowRight, Clock, Dices, Lock, Shield, Sparkles } from "lucide-react";
+import { ArrowRight, Clock, Dices, Lock, Shield, Sparkles, KeyRound, Eye, EyeOff } from "lucide-react";
 import Swal from "sweetalert2";
 
 export default function GuestIndexPage() {
   const [customSlug, setCustomSlug] = useState("");
+  const [guestPassword, setGuestPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleOpenLocker = (slugToUse?: string) => {
@@ -16,13 +18,19 @@ export default function GuestIndexPage() {
     if (!target) {
       Swal.fire({
         title: "Locker Name Required",
-        text: "Please type a locker name or click 'Random Locker'.",
+        text: "Please choose a locker name or click 'Random Locker'.",
         icon: "warning",
       });
       return;
     }
 
     const sanitized = target.replace(/[^a-z0-9_-]/g, "-");
+    
+    // If user provided a password on this entry screen, pass it via sessionStorage so it pre-fills/auto-unlocks
+    if (guestPassword) {
+      sessionStorage.setItem(`zlocker_pass_${sanitized}`, guestPassword);
+    }
+
     router.push(`/guest/${sanitized}`);
   };
 
@@ -44,16 +52,16 @@ export default function GuestIndexPage() {
           Instant Guest Locker
         </h1>
         <p className="text-default-500 text-sm sm:text-base max-w-lg mx-auto">
-          Create or open a temporary, zero-knowledge encrypted locker for notes and files. No sign-up required.
+          Create or open a temporary, password-protected zero-knowledge locker for notes and files. No sign-up required.
         </p>
       </div>
 
       {/* Main Locker Input Card */}
       <Card className="border border-default-200 shadow-md p-6">
-        <CardBody className="space-y-6">
+        <CardBody className="space-y-5">
           <div className="space-y-2 text-left">
             <label htmlFor="locker-slug-input" className="text-xs font-semibold text-default-600 block">
-              Choose your Locker URL or Name:
+              1. Choose your Locker URL / Name:
             </label>
             <div className="flex items-center border border-default-300 rounded-xl px-3 py-2 focus-within:border-primary bg-default-50 transition-colors">
               <span className="text-default-400 text-sm font-mono select-none">
@@ -71,7 +79,33 @@ export default function GuestIndexPage() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="space-y-2 text-left">
+            <label htmlFor="locker-pass-input" className="text-xs font-semibold text-default-600 flex items-center justify-between">
+              <span>2. Locker Password (Required to encrypt/decrypt):</span>
+              <span className="text-[11px] text-default-400 font-normal">AES-256 E2EE</span>
+            </label>
+            <div className="relative flex items-center border border-default-300 rounded-xl px-3 py-2 focus-within:border-primary bg-default-50 transition-colors">
+              <KeyRound size={16} className="text-default-400 mr-2 flex-shrink-0" />
+              <input
+                id="locker-pass-input"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter secret password"
+                value={guestPassword}
+                onChange={(e) => setGuestPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleOpenLocker()}
+                className="bg-transparent text-sm w-full outline-none pr-8 font-medium"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 text-default-400 hover:text-foreground"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Button
               color="primary"
               size="lg"
@@ -79,7 +113,7 @@ export default function GuestIndexPage() {
               endContent={<ArrowRight size={18} />}
               onPress={() => handleOpenLocker()}
             >
-              Open Guest Locker
+              Open / Create Guest Locker
             </Button>
             <Button
               variant="flat"
@@ -100,9 +134,9 @@ export default function GuestIndexPage() {
           <div className="p-2 bg-primary/10 text-primary rounded-lg w-fit">
             <Lock size={18} />
           </div>
-          <h3 className="text-sm font-bold">Zero-Knowledge</h3>
+          <h3 className="text-sm font-bold">Password Protected</h3>
           <p className="text-xs text-default-500">
-            Encrypted directly in your browser with AES-256 before upload.
+            Encrypted with 256-bit AES-GCM directly in your browser.
           </p>
         </div>
 
