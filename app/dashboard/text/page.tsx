@@ -1,12 +1,22 @@
 "use client";
 
 import { Card, CardBody } from "@heroui/card";
-import { Lock, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 
 import { useDeleteContent, useGetAllContent } from "@/hooks/useContent";
 import { ContentCard } from "@/components/ContentCard";
+import { isZeroKnowledgeCiphertext } from "@/lib/crypto";
+
+const extractNoteTitle = (htmlContent: string, index: number): string => {
+  if (isZeroKnowledgeCiphertext(htmlContent)) {
+    return `Encrypted Note #${index + 1}`;
+  }
+  const plain = htmlContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (!plain) return `Note #${index + 1}`;
+  return plain.length > 28 ? plain.slice(0, 28) + "..." : plain;
+};
 
 const Page = () => {
   const router = useRouter();
@@ -94,7 +104,7 @@ const Page = () => {
           <ContentCard
             key={ele._id}
             content={ele.content}
-            title={`Note ${i + 1}`}
+            title={extractNoteTitle(ele.content, i)}
             onDelete={() => handleDelete(ele._id)}
             onEdit={() => handleEdit(ele._id)}
           />

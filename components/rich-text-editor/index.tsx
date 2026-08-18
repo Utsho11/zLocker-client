@@ -4,9 +4,9 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import Highlight from "@tiptap/extension-highlight";
-import { Card, CardBody } from "@heroui/card";
 import Heading from "@tiptap/extension-heading";
-import { useEffect } from "react";
+import { Card, CardBody } from "@heroui/card";
+import { useEffect, useRef } from "react";
 
 import MenuBar from "./menu-bar";
 
@@ -22,6 +22,7 @@ export default function RichTextEditor({
   editable,
 }: RichTextEditorProps) {
   const isEditable = editable ?? true;
+  const isInternalChange = useRef(false);
 
   const editor = useEditor({
     editable: isEditable,
@@ -29,12 +30,17 @@ export default function RichTextEditor({
       StarterKit.configure({
         bulletList: {
           HTMLAttributes: {
-            class: "list-disc ml-4",
+            class: "list-disc ml-6 my-2",
           },
         },
         orderedList: {
           HTMLAttributes: {
-            class: "list-decimal ml-4",
+            class: "list-decimal ml-6 my-2",
+          },
+        },
+        paragraph: {
+          HTMLAttributes: {
+            class: "my-1 leading-relaxed",
           },
         },
       }),
@@ -46,33 +52,49 @@ export default function RichTextEditor({
       }),
       Highlight,
     ],
-    content: content,
+    content: content || "",
     editorProps: {
       attributes: {
         class: isEditable
-          ? "min-h-[calc(100vh-60px)] p-3 outline-none"
-          : "min-h-[calc(100vh-60px)] p-3 text-gray-700",
+          ? "min-h-[350px] sm:min-h-[450px] p-4 outline-none prose dark:prose-invert max-w-none text-foreground font-sans text-sm sm:text-base"
+          : "min-h-[350px] sm:min-h-[450px] p-4 text-default-700 prose dark:prose-invert max-w-none text-sm sm:text-base",
       },
     },
     onUpdate: ({ editor }) => {
-      if (onChange) onChange(editor.getHTML());
+      isInternalChange.current = true;
+      if (onChange) {
+        onChange(editor.getHTML());
+      }
+      setTimeout(() => {
+        isInternalChange.current = false;
+      }, 0);
     },
+    immediatelyRender: false,
   });
 
+  // Only update editor if external change occurs (e.g. data loaded from backend or decrypted)
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content, false); // false prevents triggering onUpdate
+    if (!editor) return;
+
+    if (!isInternalChange.current && content !== editor.getHTML()) {
+      editor.commands.setContent(content || "", false);
     }
   }, [content, editor]);
 
   if (!editor) {
-    return null;
+    return (
+      <Card className="w-full border border-default-200">
+        <CardBody className="h-64 flex items-center justify-center text-default-400">
+          Loading editor...
+        </CardBody>
+      </Card>
+    );
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full border border-default-200 shadow-sm overflow-hidden">
       {isEditable && <MenuBar editor={editor} />}
-      <CardBody className="space-y-2 w-full mx-auto">
+      <CardBody className="p-0 overflow-y-auto">
         <EditorContent editor={editor} />
       </CardBody>
     </Card>

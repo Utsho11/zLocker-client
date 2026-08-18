@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="zl-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#006FEE"/>
+      <stop offset="100%" stop-color="#9353D3"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#zl-grad)"/>
+  <path d="M8 7H24C24.5523 7 25 7.44772 25 8V10C25 10.2652 24.8946 10.5196 24.7071 10.7071L13.4142 22H24C24.5523 22 25 22.4477 25 23V25C25 25.5523 24.5523 26 24 26H8C7.44772 26 7 25.5523 7 25V23C7 22.7348 7.10536 22.4804 7.29289 22.2929L18.5858 11H8C7.44772 11 7 10.5523 7 10V8C7 7.44772 7.44772 7 8 7Z" fill="#FFFFFF"/>
+</svg>

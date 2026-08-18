@@ -21,10 +21,22 @@ declare module "@react-types/shared" {
   }
 }
 
-const queryClient = new QueryClient();
-
 export function Providers({ children, themeProps }: ProvidersProps) {
   const router = useRouter();
+
+  const [queryClient] = React.useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60 * 1000, // 1 minute fresh cache
+            gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+            refetchOnWindowFocus: false, // Prevents laggy refetches when clicking around
+            retry: 1,
+          },
+        },
+      })
+  );
 
   return (
     <HeroUIProvider navigate={router.push}>
