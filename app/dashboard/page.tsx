@@ -41,7 +41,7 @@ import { useAuthUser } from "@/lib/useAuthUser";
 import RichTextEditor from "@/components/rich-text-editor";
 import NoteTabsManager from "@/components/NoteTabsManager";
 import { useGetAllContent, useCreateContent, useUpdateContent } from "@/hooks/useContent";
-import { useGetAllImages, useStoreImage, useDeleteImage } from "@/hooks/useImageContent";
+import { useGetAllImage, useStoreImage, useDeleteImage } from "@/hooks/useImageContent";
 import {
   decryptZeroKnowledge,
   encryptZeroKnowledge,
@@ -61,7 +61,7 @@ export default function DashboardPage() {
   const { mutateAsync: createNote, isPending: isCreatingNote } = useCreateContent();
   const { mutateAsync: updateNote, isPending: isUpdatingNote } = useUpdateContent();
 
-  const { data: fileContents = [], isLoading: isLoadingFiles, refetch: refetchFiles } = useGetAllImages();
+  const { data: fileContents = [], isLoading: isLoadingFiles, refetch: refetchFiles } = useGetAllImage();
   const { mutateAsync: uploadImage, isPending: isUploadingFile } = useStoreImage();
   const { mutateAsync: deleteImage, isPending: isDeletingFile } = useDeleteImage();
 

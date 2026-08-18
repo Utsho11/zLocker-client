@@ -47,14 +47,14 @@ export const useGetAllImage = () => {
         },
       });
 
-      // console.log(res.data);
-
       return res.data.data;
     },
     retry: false,
     staleTime: 0,
   });
 };
+
+export const useGetAllImages = useGetAllImage;
 
 export const useDeleteImage = () => {
   const queryClient = useQueryClient();
