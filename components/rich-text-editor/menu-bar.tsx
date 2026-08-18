@@ -5,23 +5,25 @@ import {
   AlignLeft,
   AlignRight,
   Bold,
+  Code,
   Copy,
+  Download,
   Heading1,
   Heading2,
   Heading3,
-  Heading4,
-  Heading5,
   Highlighter,
   Italic,
   List,
   ListOrdered,
+  Quote,
+  Redo,
   Strikethrough,
+  Undo,
 } from "lucide-react";
 import { Editor } from "@tiptap/react";
 import { Button, ButtonGroup } from "@heroui/button";
 import Swal from "sweetalert2";
 import clipboardCopy from "clipboard-copy";
-
 import { useEffect, useState } from "react";
 
 export default function MenuBar({ editor }: { editor: Editor | null }) {
@@ -40,118 +42,221 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
 
   if (!editor) return null;
 
-  const options = [
-    {
-      icon: <Heading1 size={16} />,
-      onClick: () => {
-        editor.chain().focus().toggleHeading({ level: 1 }).run();
-      },
-      isActive: editor.isActive("heading", { level: 1 }),
-    },
-    {
-      icon: <Heading2 size={16} />,
-      onClick: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
-      isActive: editor.isActive("heading", { level: 2 }),
-    },
-    {
-      icon: <Heading3 size={16} />,
-      onClick: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
-      isActive: editor.isActive("heading", { level: 3 }),
-    },
-    {
-      icon: <Heading4 size={16} />,
-      onClick: () => editor.chain().focus().toggleHeading({ level: 4 }).run(),
-      isActive: editor.isActive("heading", { level: 4 }),
-    },
-    {
-      icon: <Heading5 size={16} />,
-      onClick: () => editor.chain().focus().toggleHeading({ level: 5 }).run(),
-      isActive: editor.isActive("heading", { level: 5 }),
-    },
+  const plainText = editor.getText();
+  const wordCount = plainText.trim() ? plainText.trim().split(/\s+/).length : 0;
+  const charCount = plainText.length;
 
-    {
-      icon: <Bold size={16} />,
-      onClick: () => editor.chain().focus().toggleBold().run(),
-      isActive: editor.isActive("bold"),
-    },
-    {
-      icon: <Italic size={16} />,
-      onClick: () => editor.chain().focus().toggleItalic().run(),
-      isActive: editor.isActive("italic"),
-    },
-    {
-      icon: <Strikethrough size={16} />,
-      onClick: () => editor.chain().focus().toggleStrike().run(),
-      isActive: editor.isActive("strike"),
-    },
-    {
-      icon: <AlignLeft size={16} />,
-      onClick: () => editor.chain().focus().setTextAlign("left").run(),
-      isActive: editor.isActive({ textAlign: "left" }),
-    },
-    {
-      icon: <AlignCenter size={16} />,
-      onClick: () => editor.chain().focus().setTextAlign("center").run(),
-      isActive: editor.isActive({ textAlign: "center" }),
-    },
-    {
-      icon: <AlignRight size={16} />,
-      onClick: () => editor.chain().focus().setTextAlign("right").run(),
-      isActive: editor.isActive({ textAlign: "right" }),
-    },
-    {
-      icon: <List size={16} />,
-      onClick: () => editor.chain().focus().toggleBulletList().run(),
-      isActive: editor.isActive("bulletList"),
-    },
-    {
-      icon: <ListOrdered size={16} />,
-      onClick: () => editor.chain().focus().toggleOrderedList().run(),
-      isActive: editor.isActive("orderedList"),
-    },
-    {
-      icon: <Highlighter size={16} />,
-      onClick: () => editor.chain().focus().toggleHighlight().run(),
-      isActive: editor.isActive("highlight"),
-    },
-    {
-      icon: <Copy size={16} />,
-      onClick: async () => {
-        if (editor) {
-          const plainText = editor.getText();
-
-          await clipboardCopy(plainText);
-
-          Swal.fire({
-            toast: true,
-            position: "top-end",
-            title: "Content copied to clipboard!",
-            icon: "success",
-            timer: 1500,
-            showConfirmButton: false,
-          });
-        }
-      },
-      isActive: false,
-    },
-  ];
+  const handleExportText = () => {
+    const blob = new Blob([plainText], { type: "text/plain;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `zlocker-note-${Date.now()}.txt`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
 
   return (
-    <div className="flex justify-start border rounded-md p-2 mb-2 z-10 overflow-x-auto">
-      <ButtonGroup radius="sm" variant="light">
-        {options.map((option, index) => (
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-default-200 p-2 bg-default-50/70 z-10">
+      {/* Action Buttons Group */}
+      <div className="flex flex-wrap items-center gap-1">
+        {/* Undo / Redo */}
+        <ButtonGroup radius="sm" variant="light" size="sm">
           <Button
-            key={index}
             isIconOnly
-            color={option.isActive ? "primary" : "default"}
-            size="sm"
-            variant={option.isActive ? "solid" : "light"}
-            onPress={option.onClick}
+            title="Undo"
+            isDisabled={!editor.can().undo()}
+            onPress={() => editor.chain().focus().undo().run()}
           >
-            {option.icon}
+            <Undo size={15} />
           </Button>
-        ))}
-      </ButtonGroup>
+          <Button
+            isIconOnly
+            title="Redo"
+            isDisabled={!editor.can().redo()}
+            onPress={() => editor.chain().focus().redo().run()}
+          >
+            <Redo size={15} />
+          </Button>
+        </ButtonGroup>
+
+        <div className="h-4 w-[1px] bg-default-300 mx-1 hidden sm:block" />
+
+        {/* Headings */}
+        <ButtonGroup radius="sm" variant="light" size="sm">
+          <Button
+            isIconOnly
+            title="Heading 1"
+            color={editor.isActive("heading", { level: 1 }) ? "primary" : "default"}
+            variant={editor.isActive("heading", { level: 1 }) ? "solid" : "light"}
+            onPress={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          >
+            <Heading1 size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Heading 2"
+            color={editor.isActive("heading", { level: 2 }) ? "primary" : "default"}
+            variant={editor.isActive("heading", { level: 2 }) ? "solid" : "light"}
+            onPress={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          >
+            <Heading2 size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Heading 3"
+            color={editor.isActive("heading", { level: 3 }) ? "primary" : "default"}
+            variant={editor.isActive("heading", { level: 3 }) ? "solid" : "light"}
+            onPress={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          >
+            <Heading3 size={15} />
+          </Button>
+        </ButtonGroup>
+
+        <div className="h-4 w-[1px] bg-default-300 mx-1 hidden sm:block" />
+
+        {/* Text Styling */}
+        <ButtonGroup radius="sm" variant="light" size="sm">
+          <Button
+            isIconOnly
+            title="Bold"
+            color={editor.isActive("bold") ? "primary" : "default"}
+            variant={editor.isActive("bold") ? "solid" : "light"}
+            onPress={() => editor.chain().focus().toggleBold().run()}
+          >
+            <Bold size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Italic"
+            color={editor.isActive("italic") ? "primary" : "default"}
+            variant={editor.isActive("italic") ? "solid" : "light"}
+            onPress={() => editor.chain().focus().toggleItalic().run()}
+          >
+            <Italic size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Strikethrough"
+            color={editor.isActive("strike") ? "primary" : "default"}
+            variant={editor.isActive("strike") ? "solid" : "light"}
+            onPress={() => editor.chain().focus().toggleStrike().run()}
+          >
+            <Strikethrough size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Highlight"
+            color={editor.isActive("highlight") ? "primary" : "default"}
+            variant={editor.isActive("highlight") ? "solid" : "light"}
+            onPress={() => editor.chain().focus().toggleHighlight().run()}
+          >
+            <Highlighter size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Blockquote"
+            color={editor.isActive("blockquote") ? "primary" : "default"}
+            variant={editor.isActive("blockquote") ? "solid" : "light"}
+            onPress={() => editor.chain().focus().toggleBlockquote().run()}
+          >
+            <Quote size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Code Block"
+            color={editor.isActive("codeBlock") ? "primary" : "default"}
+            variant={editor.isActive("codeBlock") ? "solid" : "light"}
+            onPress={() => editor.chain().focus().toggleCodeBlock().run()}
+          >
+            <Code size={15} />
+          </Button>
+        </ButtonGroup>
+
+        <div className="h-4 w-[1px] bg-default-300 mx-1 hidden sm:block" />
+
+        {/* Alignment & Lists */}
+        <ButtonGroup radius="sm" variant="light" size="sm">
+          <Button
+            isIconOnly
+            title="Align Left"
+            color={editor.isActive({ textAlign: "left" }) ? "primary" : "default"}
+            variant={editor.isActive({ textAlign: "left" }) ? "solid" : "light"}
+            onPress={() => editor.chain().focus().setTextAlign("left").run()}
+          >
+            <AlignLeft size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Align Center"
+            color={editor.isActive({ textAlign: "center" }) ? "primary" : "default"}
+            variant={editor.isActive({ textAlign: "center" }) ? "solid" : "light"}
+            onPress={() => editor.chain().focus().setTextAlign("center").run()}
+          >
+            <AlignCenter size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Align Right"
+            color={editor.isActive({ textAlign: "right" }) ? "primary" : "default"}
+            variant={editor.isActive({ textAlign: "right" }) ? "solid" : "light"}
+            onPress={() => editor.chain().focus().setTextAlign("right").run()}
+          >
+            <AlignRight size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Bullet List"
+            color={editor.isActive("bulletList") ? "primary" : "default"}
+            variant={editor.isActive("bulletList") ? "solid" : "light"}
+            onPress={() => editor.chain().focus().toggleBulletList().run()}
+          >
+            <List size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Numbered List"
+            color={editor.isActive("orderedList") ? "primary" : "default"}
+            variant={editor.isActive("orderedList") ? "solid" : "light"}
+            onPress={() => editor.chain().focus().toggleOrderedList().run()}
+          >
+            <ListOrdered size={15} />
+          </Button>
+        </ButtonGroup>
+      </div>
+
+      {/* Right Tools: Word Count & Export */}
+      <div className="flex items-center gap-2">
+        <span className="text-[11px] text-default-400 font-mono hidden md:inline-block select-none">
+          {wordCount} words &bull; {charCount} chars
+        </span>
+
+        <ButtonGroup radius="sm" variant="light" size="sm">
+          <Button
+            isIconOnly
+            title="Copy Raw Text"
+            onPress={async () => {
+              await clipboardCopy(plainText);
+              Swal.fire({
+                toast: true,
+                position: "top-end",
+                title: "Text copied to clipboard!",
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false,
+              });
+            }}
+          >
+            <Copy size={15} />
+          </Button>
+          <Button
+            isIconOnly
+            title="Download .txt"
+            onPress={handleExportText}
+          >
+            <Download size={15} />
+          </Button>
+        </ButtonGroup>
+      </div>
     </div>
   );
 }

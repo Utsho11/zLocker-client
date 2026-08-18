@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <defs>
+    <linearGradient id="zl-apple-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#006FEE"/>
+      <stop offset="100%" stop-color="#9353D3"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="url(#zl-apple-grad)"/>
+  <path d="M45 40H135C138.314 40 141 42.6863 141 46V58C141 59.5913 140.368 61.1174 139.243 62.2426L75.4853 126H135C138.314 126 141 128.686 141 132V144C141 147.314 138.314 150 135 150H45C41.6863 150 39 147.314 39 144V132C39 130.409 39.6321 128.883 40.7574 127.757L104.515 64H45C41.6863 64 39 61.3137 39 58V46C39 42.6863 41.6863 40 45 40Z" fill="#FFFFFF"/>
+</svg>

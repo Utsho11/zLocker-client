@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Lock, Plus, X } from "lucide-react";
+import { Eye, EyeOff, Lock, Plus, X } from "lucide-react";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ import { encryptZeroKnowledge } from "@/lib/crypto";
 const Page = () => {
   const [content, setContent] = useState<string>("");
   const [passphrase, setPassphrase] = useState<string>("");
+  const [showPassphrase, setShowPassphrase] = useState<boolean>(false);
   const [enableLock, setEnableLock] = useState<boolean>(false);
   const router = useRouter();
 
@@ -100,13 +101,22 @@ const Page = () => {
             </Button>
 
             {enableLock && (
-              <input
-                type="password"
-                placeholder="Set Passphrase (Zero-Knowledge)"
-                value={passphrase}
-                onChange={(e) => setPassphrase(e.target.value)}
-                className="px-3 py-1.5 rounded-lg border border-warning text-xs bg-background outline-none w-52"
-              />
+              <div className="relative flex items-center">
+                <input
+                  type={showPassphrase ? "text" : "password"}
+                  placeholder="Set Passphrase"
+                  value={passphrase}
+                  onChange={(e) => setPassphrase(e.target.value)}
+                  className="px-3 py-1.5 pr-8 rounded-lg border border-warning text-xs bg-background outline-none w-52"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassphrase(!showPassphrase)}
+                  className="absolute right-2 text-default-400 hover:text-foreground"
+                >
+                  {showPassphrase ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
             )}
           </div>
         </div>
