@@ -13,8 +13,13 @@ import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { useState } from "react";
 import Swal from "sweetalert2";
 
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "https://zlocker-server.vercel.app/api";
+
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -24,15 +29,16 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
-      const response = await axios.post("/auth/send-email", {
+      const response = await axios.post(`${BACKEND_URL}/auth/send-email`, {
         name: form.name,
         email: form.email,
         message: form.message,
       });
 
-      if (response.status === 200) {
+      if (response.status === 200 || response.data?.success) {
         Swal.fire({
           icon: "success",
           title: "Message Sent",
@@ -50,6 +56,8 @@ export default function ContactPage() {
         title: "Oops...",
         text: "Something went wrong. Please try again later.",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

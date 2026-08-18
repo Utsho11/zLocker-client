@@ -15,7 +15,7 @@ const Page = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { mutate: createContent } = useCreateContent();
+  const { mutateAsync: createContent } = useCreateContent();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

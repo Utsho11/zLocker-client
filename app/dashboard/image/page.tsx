@@ -19,11 +19,9 @@ import ImageInputCard from "@/components/ImageInputCard";
 
 const Page = () => {
   const { data, isLoading } = useGetAllImage();
-  const { mutate: deleteImage, isPending: isDeleting } = useDeleteImage();
+  const { mutateAsync: deleteImage, isPending: isDeleting } = useDeleteImage();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [selectedImage, setSelectedImage] = useState("");
-
-  console.log(data);
 
   const handleDelete = async (id: string) => {
     const confirm = await Swal.fire({
@@ -41,7 +39,7 @@ const Page = () => {
       } catch (error: any) {
         Swal.fire(
           "Error",
-          error?.message || "Failed to delete image.",
+          error?.response?.data?.message || error?.message || "Failed to delete image.",
           "error"
         );
       }
@@ -49,13 +47,21 @@ const Page = () => {
   };
 
   const handleDownload = async (url: string, name: string) => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    const link = document.createElement("a");
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch image");
+      const blob = await response.blob();
+      const link = document.createElement("a");
 
-    link.href = window.URL.createObjectURL(blob);
-    link.download = name || "image.jpg";
-    link.click();
+      link.href = window.URL.createObjectURL(blob);
+      link.download = name || "image.jpg";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      // Fallback to opening in new window
+      window.open(url, "_blank");
+    }
   };
 
   const handleView = (imageUrl: string) => {

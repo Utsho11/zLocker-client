@@ -22,7 +22,22 @@ import { Button, ButtonGroup } from "@heroui/button";
 import Swal from "sweetalert2";
 import clipboardCopy from "clipboard-copy";
 
+import { useEffect, useState } from "react";
+
 export default function MenuBar({ editor }: { editor: Editor | null }) {
+  const [, setUpdateTick] = useState(0);
+
+  useEffect(() => {
+    if (!editor) return;
+    const handleUpdate = () => setUpdateTick((prev) => prev + 1);
+    editor.on("transaction", handleUpdate);
+    editor.on("selectionUpdate", handleUpdate);
+    return () => {
+      editor.off("transaction", handleUpdate);
+      editor.off("selectionUpdate", handleUpdate);
+    };
+  }, [editor]);
+
   if (!editor) return null;
 
   const options = [
@@ -31,7 +46,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       onClick: () => {
         editor.chain().focus().toggleHeading({ level: 1 }).run();
       },
-      isActive: editor.isActive("heading", { level: 1 }) ? "is-active" : "",
+      isActive: editor.isActive("heading", { level: 1 }),
     },
     {
       icon: <Heading2 size={16} />,

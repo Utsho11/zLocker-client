@@ -11,7 +11,7 @@ import { ContentCard } from "@/components/ContentCard";
 const Page = () => {
   const router = useRouter();
   const { data = [], isPending } = useGetAllContent();
-  const { mutate: deleteContent } = useDeleteContent();
+  const { mutateAsync: deleteContent } = useDeleteContent();
 
   if (isPending) {
     return (
@@ -30,8 +30,8 @@ const Page = () => {
     router.push(`/dashboard/text/edit/${id}`);
   };
 
-  const handleDelete = (id: string) => {
-    Swal.fire({
+  const handleDelete = async (id: string) => {
+    const result = await Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
       icon: "warning",
@@ -39,16 +39,24 @@ const Page = () => {
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteContent(id as string);
         Swal.fire({
           title: "Deleted!",
-          text: "Your file has been deleted.",
+          text: "Your note has been deleted.",
           icon: "success",
         });
-        deleteContent(id as string);
+      } catch (error: any) {
+        Swal.fire({
+          title: "Error!",
+          text: error?.response?.data?.message || "Failed to delete note.",
+          icon: "error",
+        });
       }
-    });
+    }
   };
 
   return (
