@@ -52,7 +52,7 @@ export default function GuestIndexPage() {
       <Card className="border border-default-200 shadow-md p-6">
         <CardBody className="space-y-6">
           <div className="space-y-2 text-left">
-            <label className="text-xs font-semibold text-default-600">
+            <label htmlFor="locker-slug-input" className="text-xs font-semibold text-default-600 block">
               Choose your Locker URL or Name:
             </label>
             <div className="flex items-center border border-default-300 rounded-xl px-3 py-2 focus-within:border-primary bg-default-50 transition-colors">
@@ -60,6 +60,7 @@ export default function GuestIndexPage() {
                 zlocker.app/guest/
               </span>
               <input
+                id="locker-slug-input"
                 type="text"
                 placeholder="my-secret-vault"
                 value={customSlug}
