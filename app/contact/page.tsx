@@ -1,13 +1,8 @@
 "use client";
 
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  Input,
-  Textarea,
-  Button,
-} from "@nextui-org/react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Input, Textarea } from "@heroui/input";
+import { Button } from "@heroui/button";
 import axios from "axios";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { useState } from "react";

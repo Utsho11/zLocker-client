@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, CardBody, CardHeader, Divider } from "@nextui-org/react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Divider } from "@heroui/divider";
 import {
   Lock,
   Image as ImageIcon,

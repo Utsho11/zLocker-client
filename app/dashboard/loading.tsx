@@ -1,4 +1,4 @@
-import { Spinner } from "@nextui-org/react";
+import { Spinner } from "@heroui/spinner";
 import { Lock } from "lucide-react";
 
 export default function Loading() {
